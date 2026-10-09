@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Generator Sertifikat Massal v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h1 { margin-top: 0; color: #1a73e8; }
+    h3 { font-size: 15px; margin: 15px 0 8px; color: #444; }
+    .step {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #fafafa;
+    }
+    .step h2 {
+        margin-top: 0;
+        font-size: 18px;
+        color: #1a73e8;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .step-num {
+        background: #1a73e8;
+        color: #fff;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    label { display: block; margin: 8px 0 4px; font-weight: 500; font-size: 13px; }
+    input[type="file"], input[type="text"], input[type="number"], select {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        width: 100%;
+    }
+    input[type="color"] {
+        width: 100%;
+        height: 38px;
+        padding: 2px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    button {
+        padding: 10px 18px;
+        background: #1a73e8;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+    button:hover { background: #1557b0; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    button.secondary { background: #5f6368; }
+    button.secondary:hover { background: #444; }
+    button.success { background: #34a853; font-size: 16px; padding: 14px 28px; }
+    button.success:hover { background: #2a8544; }
+    button.danger { background: #ea4335; padding: 6px 12px; font-size: 12px; }
+    button.danger:hover { background: #c5221f; }
+    button.small { padding: 6px 12px; font-size: 12px; }
+
+    .preview-box {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+        margin-top: 10px;
+        max-width: 100%;
+        overflow: auto;
+    }
+    .preview-box img, .preview-box canvas { max-width: 100%; display: block; margin: auto; }
+    .info {
+        background: #e8f0fe;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 10px;
+        color: #1967d2;
+    }
+    .warn {
+        background: #fef7e0;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 10px;
+        color: #b06000;
+    }
+    .row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+    .col { flex: 1; min-width: 150px; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
+    th { background: #f1f3f4; }
+
+    /* TEXT FIELDS BUILDER */
+    .text-field-card {
+        background: #fff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 12px;
+        position: relative;
+        transition: 0.2s;
+    }
+    .text-field-card.active {
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+    }
+    .text-field-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+    .text-field-title {
+        font-weight: 600;
+        color: #1a73e8;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .color-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #999;
+    }
+    .text-field-card .row { gap: 10px; }
+    .text-field-card .col { min-width: 120px; }
+
+    /* CANVAS PREVIEW DRAG */
+    #canvasWrapper {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+        line-height: 0;
+    }
+    #previewCanvas {
+        display: block;
+        max-width: 100%;
+        cursor: default;
+        user-select: none;
+    }
+    #previewCanvas.dragging { cursor: grabbing !important; }
+    #previewCanvas.dragover { cursor: grab; }
+
+    /* Halaman selector */
+    .page-selector {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .page-btn {
+        background: #f1f3f4;
+        color: #333;
+        padding: 8px 16px;
+        border: 2px solid transparent;
+    }
+    .page-btn.active {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1557b0;
+    }
+
+    /* LOADING OVERLAY */
+    #loadingOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: #fff;
+        padding: 20px;
+    }
+    #loadingOverlay.active { display: flex; }
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid rgba(255,255,255,0.2);
+        border-top-color: #1a73e8;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .loading-status {
+        font-size: 14px; opacity: 0.85; margin-bottom: 20px;
+        min-height: 20px; text-align: center;
+    }
+    .progress-bar-outer {
+        width: 400px; max-width: 90vw; height: 12px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px; overflow: hidden; margin-bottom: 8px;
+    }
+    .progress-bar-inner {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #1a73e8, #34a853);
+        transition: width 0.2s;
+    }
+    .progress-text { font-size: 13px; opacity: 0.9; }
+
+    .inline-progress { margin-top: 12px; display: none; }
+    .inline-progress.active { display: block; }
+    .inline-progress-bar {
+        width: 100%; height: 10px; background: #e0e0e0;
+        border-radius: 6px; overflow: hidden;
+    }
+    .inline-progress-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #1a73e8, #34a853);
+        transition: width 0.15s;
+    }
+    .inline-progress-text {
+        font-size: 12px; color: #555; margin-top: 5px;
+        display: flex; justify-content: space-between;
+    }
+
+    #log {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family: 'Consolas', monospace;
+        font-size: 12px;
+        padding: 12px;
+        border-radius: 6px;
+        max-height: 220px;
+        overflow-y: auto;
+        margin-top: 15px;
+        white-space: pre-wrap;
+        display: none;
+    }
+    #log.active { display: block; }
+    .log-ok { color: #4ec9b0; }
+    .log-warn { color: #dcdcaa; }
+    .log-err { color: #f48771; }
+    .log-info { color: #569cd6; }
+
+    .badge {
+        background: #34a853; color: #fff; padding: 2px 8px;
+        border-radius: 12px; font-size: 11px; margin-left: 6px;
+    }
+    .badge.new { background: #ea4335; }
+
+    .hint {
+        background: #e6f4ea;
+        border-left: 4px solid #34a853;
+        padding: 10px 15px;
+        font-size: 13px;
+        color: #1e7e34;
+        margin-top: 8px;
+        border-radius: 4px;
+    }
+
+    /* PAGE SETTINGS */
+    .page-settings {
+        background: #fff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    .page-settings-title {
+        font-weight: 600;
+        color: #1a73e8;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-title">Memproses Sertifikat...</div>
+    <div class="loading-status" id="loadingStatus">Menyiapkan...</div>
+    <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progressBarInner"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+
+<div class="container">
+    <h1>🎓 Generator Sertifikat Massal <span class="badge new">v3</span></h1>
+    <p style="color:#666;">Drag & drop teks + multi halaman + nomor sertifikat otomatis.</p>
+
+    <!-- STEP 1: Template -->
+    <div class="step">
+        <h2><span class="step-num">1</span> Upload Template Sertifikat</h2>
+        <label>Pilih gambar sertifikat (PNG/JPG):</label>
+        <input type="file" id="templateFile" accept="image/*">
+        <div class="preview-box" id="templatePreview" style="display:none;">
+            <img id="templateImg" alt="Preview Template">
+        </div>
+    </div>
+
+    <!-- STEP 2: Excel -->
+    <div class="step">
+        <h2><span class="step-num">2</span> Upload Data Excel</h2>
+        <label>Pilih file Excel (.xlsx / .xls / .csv):</label>
+        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+        <div class="info" id="excelInfo" style="display:none;"></div>
+        <div id="excelPreview"></div>
+    </div>
+
+    <!-- STEP 3: Pages & Text Fields -->
+    <div class="step">
+        <h2><span class="step-num">3</span> Halaman & Teks Sertifikat</h2>
+
+        <!-- PAGE SETTINGS -->
+        <div class="page-settings">
+            <div class="page-settings-title">
+                <span>📄 Pengaturan Halaman</span>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Jumlah Halaman per Sertifikat</label>
+                    <select id="pageCount" onchange="onPageCountChange()">
+                        <option value="1">1 Halaman</option>
+                        <option value="2">2 Halaman (opsional)</option>
+                    </select>
+                </div>
+                <div class="col" id="page2TemplateCol" style="display:none;">
+                    <label>Upload Template Halaman 2</label>
+                    <input type="file" id="page2TemplateFile" accept="image/*">
+                    <div class="hint" id="page2Hint" style="display:none;">✅ Template halaman 2 siap</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE SELECTOR -->
+        <div class="page-selector" id="pageSelector">
+            <button class="page-btn active" onclick="selectPage(1)">Halaman 1</button>
+            <button class="page-btn" id="page2Btn" onclick="selectPage(2)" style="display:none;">Halaman 2</button>
+        </div>
+
+        <div class="hint">
+            💡 <b>Cara pakai:</b> Klik teks di preview lalu <b>drag dengan mouse</b> untuk memindahkan posisi.
+            Atau atur manual lewat kolom X/Y di bawah.
+        </div>
+
+        <div id="textFieldsContainer"></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
+            <button class="secondary" onclick="addTextField('nama')">➕ Teks Nama</button>
+            <button class="secondary" onclick="addTextField('nim')">➕ Teks NIM</button>
+            <button class="secondary" onclick="addTextField('nomor')">➕ Nomor Sertifikat</button>
+            <button class="secondary" onclick="addTextField('custom')">➕ Teks Custom</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: Preview -->
+    <div class="step">
+        <h2><span class="step-num">4</span> Preview Sertifikat</h2>
+        <p style="font-size:13px;color:#888;margin-top:0;">
+            🖱️ Klik & tahan teks lalu geser dengan mouse untuk memindahkan posisi.
+        </p>
+        <div class="preview-box">
+            <div id="canvasWrapper">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 5: Generate -->
+    <div class="step">
+        <h2><span class="step-num">5</span> Generate Semua Sertifikat</h2>
+        <button class="success" id="generateBtn" onclick="generateAll()" disabled>
+            📦 Generate & Download ZIP
+        </button>
+
+        <div class="inline-progress" id="inlineProgress">
+            <div class="inline-progress-bar">
+                <div class="inline-progress-fill" id="inlineProgressFill"></div>
+            </div>
+            <div class="inline-progress-text">
+                <span id="inlineProgressLabel">Memproses...</span>
+                <span id="inlineProgressPct">0%</span>
+            </div>
+        </div>
+
+        <div id="log"></div>
+    </div>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+let templateImage = null;
+let templateImage2 = null; // Halaman 2
+let excelData = [];
+let excelHeaders = [];
+let textFields = []; // { id, page, type, column, format, posX, posY, ... }
+let fieldIdCounter = 0;
+let currentPage = 1; // Halaman yang sedang diedit
+let activeFieldId = null; // Field yang sedang disorot
+
+// Drag state
+let dragState = {
+    isDragging: false,
+    fieldId: null,
+    startMouseX: 0,
+    startMouseY: 0,
+    startPosX: 0,
+    startPosY: 0
+};
+
+/* ==================== PAGE SETTINGS ==================== */
+function onPageCountChange() {
+    const count = parseInt(document.getElementById('pageCount').value);
+    const page2Btn = document.getElementById('page2Btn');
+    const page2TemplateCol = document.getElementById('page2TemplateCol');
+
+    if (count === 2) {
+        page2Btn.style.display = 'inline-block';
+        page2TemplateCol.style.display = 'block';
+    } else {
+        page2Btn.style.display = 'none';
+        page2TemplateCol.style.display = 'none';
+        // Pindah ke halaman 1 jika sedang di halaman 2
+        if (currentPage === 2) selectPage(1);
+        // Hapus field di halaman 2
+        const before = textFields.length;
+        textFields = textFields.filter(f => f.page !== 2);
+        if (textFields.length !== before) renderTextFields();
+    }
+    updatePreview();
+    checkReady();
+}
+
+function selectPage(page) {
+    currentPage = page;
+    document.querySelectorAll('.page-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (i + 1) === page);
+    });
+    renderTextFields();
+    updatePreview();
+}
+
+/* ==================== PAGE 2 TEMPLATE ==================== */
+document.getElementById('page2TemplateFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+            templateImage2 = img;
+            document.getElementById('page2Hint').style.display = 'block';
+            updatePreview();
+            checkReady();
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+/* ==================== TEXT FIELD BUILDER ==================== */
+function addTextField(type = 'custom') {
+    const id = ++fieldIdCounter;
+    const page = currentPage;
+
+    let defaultConfig = {
+        id,
+        page,
+        type,
+        column: '',
+        format: 'asis',
+        posX: 50,
+        posY: 50,
+        fontSize: 36,
+        fontFamily: 'helvetica',
+        fontStyle: 'bold',
+        color: '#000000',
+        autoFit: true,
+        prefix: '',
+        suffix: ''
+    };
+
+    // Hitung Y otomatis berdasarkan jumlah field di halaman yang sama
+    const fieldsOnPage = textFields.filter(f => f.page === page).length;
+    defaultConfig.posY = 40 + (fieldsOnPage * 10);
+
+    if (type === 'nama') {
+        defaultConfig.fontSize = 36;
+        defaultConfig.label = 'Nama Peserta';
+    } else if (type === 'nim') {
+        defaultConfig.fontSize = 18;
+        defaultConfig.fontStyle = 'normal';
+        defaultConfig.label = 'NIM';
+    } else if (type === 'nomor') {
+        defaultConfig.fontSize = 14;
+        defaultConfig.fontStyle = 'normal';
+        defaultConfig.label = 'Nomor Sertifikat';
+        defaultConfig.prefix = 'No: ';
+    } else {
+        defaultConfig.fontSize = 16;
+        defaultConfig.label = 'Teks Custom';
+    }
+
+    if (excelHeaders.length > 0) {
+        const keyword = type === 'nama' ? 'nama' : type === 'nim' ? 'nim' : type === 'nomor' ? 'nomor' : '';
+        if (keyword) {
+            const found = excelHeaders.find(h => h.toLowerCase().includes(keyword));
+            if (found) defaultConfig.column = found;
+        }
+        if (!defaultConfig.column) defaultConfig.column = excelHeaders[0];
+    }
+
+    textFields.push(defaultConfig);
+    renderTextFields();
+    updatePreview();
+}
+
+function removeTextField(id) {
+    textFields = textFields.filter(f => f.id !== id);
+    if (activeFieldId === id) activeFieldId = null;
+    renderTextFields();
+    updatePreview();
+}
+
+function updateField(id, key, value) {
+    const f = textFields.find(x => x.id === id);
+    if (f) { f[key] = value; updatePreview(); }
+}
+
+function focusField(id) {
+    activeFieldId = id;
+    renderTextFields();
+    updatePreview();
+}
+
+function renderTextFields() {
+    const container = document.getElementById('textFieldsContainer');
+    container.innerHTML = '';
+
+    const fieldsOnPage = textFields.filter(f => f.page === currentPage);
+
+    if (fieldsOnPage.length === 0) {
+        container.innerHTML = `<div class="warn">Belum ada teks di halaman ${currentPage}. Klik tombol di bawah untuk menambah.</div>`;
+        checkReady();
+        return;
+    }
+
+    fieldsOnPage.forEach((f, idx) => {
+        const card = document.createElement('div');
+        card.className = 'text-field-card' + (activeFieldId === f.id ? ' active' : '');
+        card.dataset.fieldId = f.id;
+
+        const colOptions = excelHeaders.map(h =>
+            `<option value="${h}" ${f.column === h ? 'selected' : ''}>${h}</option>`
+        ).join('');
+
+        card.innerHTML = `
+            <div class="text-field-header" onclick="focusField(${f.id})">
+                <span class="text-field-title">
+                    <span class="color-dot" style="background:${f.color};"></span>
+                    📝 ${f.label} #${idx+1}
+                    <span style="font-weight:400;font-size:11px;color:#888;">(Hal. ${f.page})</span>
+                </span>
+                <button class="danger" onclick="event.stopPropagation();removeTextField(${f.id})">🗑 Hapus</button>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Kolom Excel</label>
+                    <select onchange="updateField(${f.id}, 'column', this.value)">
+                        <option value="">-- pilih --</option>
+                        ${colOptions}
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Format</label>
+                    <select onchange="updateField(${f.id}, 'format', this.value)">
+                        <option value="asis" ${f.format==='asis'?'selected':''}>Sesuai asli</option>
+                        <option value="uppercase" ${f.format==='uppercase'?'selected':''}>HURUF BESAR</option>
+                        <option value="titlecase" ${f.format==='titlecase'?'selected':''}>Huruf Kapital</option>
+                        <option value="lowercase" ${f.format==='lowercase'?'selected':''}>huruf kecil</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Prefix</label>
+                    <input type="text" value="${f.prefix}" placeholder="cth: No: "
+                        oninput="updateField(${f.id}, 'prefix', this.value)">
+                </div>
+                <div class="col">
+                    <label>Suffix</label>
+                    <input type="text" value="${f.suffix}" placeholder="cth: /2025"
+                        oninput="updateField(${f.id}, 'suffix', this.value)">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Posisi X (%)</label>
+                    <input type="number" value="${f.posX.toFixed(1)}" min="0" max="100" step="0.1"
+                        oninput="updateField(${f.id}, 'posX', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Posisi Y (%)</label>
+                    <input type="number" value="${f.posY.toFixed(1)}" min="0" max="100" step="0.1"
+                        oninput="updateField(${f.id}, 'posY', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Ukuran Font (pt)</label>
+                    <input type="number" value="${f.fontSize}" min="6" max="200"
+                        oninput="updateField(${f.id}, 'fontSize', parseFloat(this.value))">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Font</label>
+                    <select onchange="updateField(${f.id}, 'fontFamily', this.value)">
+                        <option value="helvetica" ${f.fontFamily==='helvetica'?'selected':''}>Helvetica</option>
+                        <option value="times" ${f.fontFamily==='times'?'selected':''}>Times New Roman</option>
+                        <option value="courier" ${f.fontFamily==='courier'?'selected':''}>Courier</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Style</label>
+                    <select onchange="updateField(${f.id}, 'fontStyle', this.value)">
+                        <option value="bold" ${f.fontStyle==='bold'?'selected':''}>Bold</option>
+                        <option value="normal" ${f.fontStyle==='normal'?'selected':''}>Normal</option>
+                        <option value="italic" ${f.fontStyle==='italic'?'selected':''}>Italic</option>
+                        <option value="bolditalic" ${f.fontStyle==='bolditalic'?'selected':''}>Bold Italic</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Warna</label>
+                    <input type="color" value="${f.color}"
+                        oninput="updateField(${f.id}, 'color', this.value)">
+                </div>
+                <div class="col">
+                    <label>Auto-fit</label>
+                    <select onchange="updateField(${f.id}, 'autoFit', this.value === 'true')">
+                        <option value="true" ${f.autoFit?'selected':''}>Ya</option>
+                        <option value="false" ${!f.autoFit?'selected':''}>Tidak</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    checkReady();
+}
+
+/* ==================== STEP 1: Template 1 ==================== */
+document.getElementById('templateFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+            templateImage = img;
+            document.getElementById('templatePreview').style.display = 'block';
+            document.getElementById('templateImg').src = ev.target.result;
+            updatePreview();
+            checkReady();
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+/* ==================== STEP 2: Excel ==================== */
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const data = new Uint8Array(ev.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+        if (json.length === 0) { alert('File Excel kosong!'); return; }
+
+        excelData = json;
+        excelHeaders = Object.keys(json[0]);
+
+        document.getElementById('excelInfo').style.display = 'block';
+        document.getElementById('excelInfo').innerHTML =
+            `✅ Berhasil memuat <b>${json.length}</b> baris. Kolom: <b>${excelHeaders.join(', ')}</b>`;
+
+        let table = '<table><tr>' + excelHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        json.slice(0, 5).forEach(row => {
+            table += '<tr>' + excelHeaders.map(h => `<td>${row[h]}</td>`).join('') + '</tr>';
+        });
+        table += '</table>';
+        if (json.length > 5) table += `<p style="font-size:12px;color:#888;">... dan ${json.length - 5} baris lainnya</p>`;
+        document.getElementById('excelPreview').innerHTML = table;
+
+        textFields.forEach(f => {
+            if (!f.column && excelHeaders.length > 0) f.column = excelHeaders[0];
+        });
+        renderTextFields();
+
+        if (textFields.length === 0) {
+            addTextField('nama');
+        }
+
+        updatePreview();
+        checkReady();
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+/* ==================== FORMAT ==================== */
+function formatValue(val, format) {
+    val = String(val == null ? '' : val).trim();
+    switch (format) {
+        case 'uppercase': return val.toUpperCase();
+        case 'lowercase': return val.toLowerCase();
+        case 'titlecase': return val.replace(/\w\S*/g, t =>
+            t.charAt(0).toUpperCase() + t.substr(1).toLowerCase());
+        default: return val;
+    }
+}
+
+/* ==================== CANVAS PREVIEW ==================== */
+function getCurrentTemplate() {
+    if (currentPage === 2 && templateImage2) return templateImage2;
+    return templateImage;
+}
+
+let canvasScaleInfo = { w: 0, h: 0 };
+
+function updatePreview() {
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const img = getCurrentTemplate();
+
+    if (!img) {
+        canvas.width = 800; canvas.height = 500;
+        ctx.fillStyle = '#eee'; ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = '#999'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(
+            currentPage === 2 && !templateImage2
+                ? 'Upload template halaman 2 dulu'
+                : 'Upload template terlebih dahulu',
+            400, 250
+        );
+        canvasScaleInfo = { w: 800, h: 500 };
+        return;
+    }
+
+    const maxW = 950;
+    const ratio = img.height / img.width;
+    let w = img.width, h = img.height;
+    if (w > maxW) { w = maxW; h = w * ratio; }
+    canvas.width = w;
+    canvas.height = h;
+    canvasScaleInfo = { w, h };
+
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const pxPerMm = w / 297;
+
+    // Ambil field di halaman ini
+    const fieldsOnPage = textFields.filter(f => f.page === currentPage);
+
+    fieldsOnPage.forEach(f => {
+        let text = '';
+        if (excelData.length > 0 && f.column) {
+            text = formatValue(excelData[0][f.column], f.format);
+        } else {
+            text = f.label || 'Contoh';
+        }
+        text = (f.prefix || '') + text + (f.suffix || '');
+        if (!text.trim()) return;
+
+        const x = w * (f.posX / 100);
+        const y = h * (f.posY / 100);
+
+        let fontSizePx = f.fontSize * 0.3528 * pxPerMm;
+        const fontFamily = f.fontFamily === 'times' ? 'Times New Roman'
+                         : f.fontFamily === 'courier' ? 'Courier New'
+                         : 'Helvetica, Arial';
+        const isBold = f.fontStyle.includes('bold');
+        const isItalic = f.fontStyle.includes('italic');
+
+        const makeFont = (size) =>
+            `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}${size}px ${fontFamily}`;
+
+        ctx.font = makeFont(fontSizePx);
+
+        if (f.autoFit) {
+            const maxTextWidth = w * 0.85;
+            while (ctx.measureText(text).width > maxTextWidth && fontSizePx > 6) {
+                fontSizePx -= 1;
+                ctx.font = makeFont(fontSizePx);
+            }
+        }
+
+        // Hitung bounding box
+        const metrics = ctx.measureText(text);
+        const textW = metrics.width;
+        const textH = fontSizePx;
+        const padding = 6;
+        const boxX = x - textW / 2 - padding;
+        const boxY = y - textH / 2 - padding;
+        const boxW = textW + padding * 2;
+        const boxH = textH + padding * 2;
+
+        // Highlight jika field aktif
+        const isActive = activeFieldId === f.id;
+        if (isActive) {
+            ctx.fillStyle = 'rgba(26,115,232,0.12)';
+            ctx.fillRect(boxX, boxY, boxW, boxH);
+            ctx.strokeStyle = '#1a73e8';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.strokeRect(boxX, boxY, boxW, boxH);
+        }
+
+        ctx.fillStyle = f.color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+
+        // Garis pemandu tipis
+        ctx.strokeStyle = 'rgba(255,0,0,0.2)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        ctx.moveTo(0, y); ctx.lineTo(w, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    updateCursorStyle();
+}
+
+/* ==================== DRAG & DROP ==================== */
+function getCanvasMousePos(evt) {
+    const canvas = document.getElementById('previewCanvas');
+    const rect = canvas.getBoundingClientRect();
+    // Sesuaikan dengan skala CSS vs canvas internal
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+function hitTestField(mouseX, mouseY) {
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const pxPerMm = w / 297;
+
+    const fieldsOnPage = textFields.filter(f => f.page === currentPage);
+
+    // Iterasi dari belakang supaya field paling atas dapat prioritas
+    for (let i = fieldsOnPage.length - 1; i >= 0; i--) {
+        const f = fieldsOnPage[i];
+        let text = '';
+        if (excelData.length > 0 && f.column) {
+            text = formatValue(excelData[0][f.column], f.format);
+        } else {
+            text = f.label || 'Contoh';
+        }
+        text = (f.prefix || '') + text + (f.suffix || '');
+        if (!text.trim()) continue;
+
+        const x = w * (f.posX / 100);
+        const y = h * (f.posY / 100);
+
+        let fontSizePx = f.fontSize * 0.3528 * pxPerMm;
+        const fontFamily = f.fontFamily === 'times' ? 'Times New Roman'
+                         : f.fontFamily === 'courier' ? 'Courier New'
+                         : 'Helvetica, Arial';
+        const isBold = f.fontStyle.includes('bold');
+        const isItalic = f.fontStyle.includes('italic');
+        const makeFont = (size) =>
+            `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}${size}px ${fontFamily}`;
+        ctx.font = makeFont(fontSizePx);
+
+        if (f.autoFit) {
+            const maxTextWidth = w * 0.85;
+            while (ctx.measureText(text).width > maxTextWidth && fontSizePx > 6) {
+                fontSizePx -= 1;
+                ctx.font = makeFont(fontSizePx);
+            }
+        }
+
+        const textW = ctx.measureText(text).width;
+        const textH = fontSizePx;
+        const padding = 8;
+        const boxX = x - textW / 2 - padding;
+        const boxY = y - textH / 2 - padding;
+        const boxW = textW + padding * 2;
+        const boxH = textH + padding * 2;
+
+        if (mouseX >= boxX && mouseX <= boxX + boxW && mouseY >= boxY && mouseY <= boxY + boxH) {
+            return f.id;
+        }
+    }
+    return null;
+}
+
+function updateCursorStyle() {
+    const canvas = document.getElementById('previewCanvas');
+    canvas.classList.remove('dragging', 'dragover');
+    // cursor akan diubah dinamis saat mousemove
+}
+
+// Mouse down
+const canvas = document.getElementById('previewCanvas');
+
+function onPointerDown(evt) {
+    const pos = getCanvasMousePos(evt);
+    const hitId = hitTestField(pos.x, pos.y);
+
+    if (hitId) {
+        const f = textFields.find(x => x.id === hitId);
+        if (f) {
+            activeFieldId = hitId;
+            dragState.isDragging = true;
+            dragState.fieldId = hitId;
+            dragState.startMouseX = pos.x;
+            dragState.startMouseY = pos.y;
+            dragState.startPosX = f.posX;
+            dragState.startPosY = f.posY;
+
+            canvas.classList.add('dragging');
+            canvas.style.cursor = 'grabbing';
+
+            renderTextFields(); // highlight card
+            updatePreview();
+            evt.preventDefault();
+        }
+    } else {
+        // Klik di area kosong: hilangkan highlight
+        if (activeFieldId !== null) {
+            activeFieldId = null;
+            renderTextFields();
+            updatePreview();
+        }
+    }
+}
+
+function onPointerMove(evt) {
+    const pos = getCanvasMousePos(evt);
+
+    if (dragState.isDragging) {
+        const f = textFields.find(x => x.id === dragState.fieldId);
+        if (!f) return;
+
+        const w = canvas.width, h = canvas.height;
+        const dx = (pos.x - dragState.startMouseX) / w * 100; // dalam persen
+        const dy = (pos.y - dragState.startMouseY) / h * 100;
+
+        f.posX = Math.max(0, Math.min(100, dragState.startPosX + dx));
+        f.posY = Math.max(0, Math.min(100, dragState.startPosY + dy));
+
+        // Update UI input di card
+        const card = document.querySelector(`.text-field-card[data-field-id="${f.id}"]`);
+        if (card) {
+            const inputs = card.querySelectorAll('input[type="number"]');
+            if (inputs.length >= 2) {
+                inputs[0].value = f.posX.toFixed(1);
+                inputs[1].value = f.posY.toFixed(1);
+            }
+        }
+
+        updatePreview();
+        evt.preventDefault();
+    } else {
+        // Hover: ubah cursor
+        const hitId = hitTestField(pos.x, pos.y);
+        canvas.style.cursor = hitId ? 'grab' : 'default';
+    }
+}
+
+function onPointerUp(evt) {
+    if (dragState.isDragging) {
+        dragState.isDragging = false;
+        dragState.fieldId = null;
+        canvas.classList.remove('dragging');
+        canvas.style.cursor = 'default';
+    }
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+
+// Touch events (untuk tablet / HP)
+canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+window.addEventListener('touchmove', onPointerMove, { passive: false });
+window.addEventListener('touchend', onPointerUp);
+
+/* ==================== Ready Check ==================== */
+function checkReady() {
+    const pageCount = parseInt(document.getElementById('pageCount').value);
+    let ready = templateImage && excelData.length > 0 &&
+                textFields.length > 0 &&
+                textFields.some(f => f.column);
+    if (pageCount === 2 && !templateImage2) ready = false;
+    document.getElementById('generateBtn').disabled = !ready;
+}
+
+/* ==================== Log ==================== */
+function log(msg, cls = '') {
+    const el = document.getElementById('log');
+    el.classList.add('active');
+    const span = document.createElement('div');
+    span.className = cls ? `log-${cls}` : '';
+    span.textContent = msg;
+    el.appendChild(span);
+    el.scrollTop = el.scrollHeight;
+}
+
+/* ==================== GENERATE ALL ==================== */
+async function generateAll() {
+    if (!templateImage) return alert('Upload template dulu!');
+
+    const pageCount = parseInt(document.getElementById('pageCount').value);
+    if (pageCount === 2 && !templateImage2) return alert('Upload template halaman 2 dulu!');
+    if (excelData.length === 0) return alert('Upload Excel dulu!');
+    if (textFields.length === 0) return alert('Tambah minimal 1 teks!');
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Memproses...';
+
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('log').classList.add('active');
+
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+    document.getElementById('inlineProgress').classList.add('active');
+
+    const total = excelData.length;
+    setProgress(0, total, 'Menyiapkan...');
+    log(`🚀 Mulai generate ${total} sertifikat (${pageCount} halaman)...`, 'info');
+
+    // Ukuran PDF dari template 1 (asumsi halaman 2 sama rasio)
+    const imgW = templateImage.width;
+    const imgH = templateImage.height;
+    const aspect = imgW / imgH;
+    let pdfW, pdfH;
+    if (aspect > 1) { pdfW = 297; pdfH = 210; }
+    else { pdfW = 210; pdfH = 297; }
+    pdfH = pdfW / aspect;
+    if (pdfH > 297) { pdfH = 297; pdfW = pdfH * aspect; }
+
+    const zip = new JSZip();
+    const imgData1 = templateImage.src;
+    const imgData2 = templateImage2 ? templateImage2.src : null;
+
+    let successCount = 0, skipCount = 0;
+
+    for (let i = 0; i < total; i++) {
+        const row = excelData[i];
+        const firstCol = textFields.find(f => f.column)?.column;
+        setProgress(i, total, `Memproses: ${row[firstCol] || 'baris ' + (i+1)}`);
+
+        try {
+            const doc = new jsPDF({
+                orientation: pdfW > pdfH ? 'landscape' : 'portrait',
+                unit: 'mm',
+                format: [pdfW, pdfH]
+            });
+
+            let hasContent = false;
+
+            // === HALAMAN 1 ===
+            doc.addImage(imgData1, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+            renderPageTexts(doc, row, 1, pdfW, pdfH, () => { hasContent = true; });
+
+            // === HALAMAN 2 (jika ada) ===
+            if (pageCount === 2 && imgData2) {
+                doc.addPage([pdfW, pdfH], pdfW > pdfH ? 'landscape' : 'portrait');
+                doc.addImage(imgData2, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+                renderPageTexts(doc, row, 2, pdfW, pdfH, () => { hasContent = true; });
+            }
+
+            if (!hasContent) {
+                skipCount++;
+                log(`⚠ Baris ${i+1}: tidak ada data teks, dilewati.`, 'warn');
+                continue;
+            }
+
+            const namaField = textFields.find(f => f.type === 'nama' && f.column) ||
+                              textFields.find(f => f.column);
+            let fileBase = namaField ? String(row[namaField.column] || `baris_${i+1}`) : `baris_${i+1}`;
+            fileBase = fileBase.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
+
+            const filename = `${String(i+1).padStart(3, '0')}_${fileBase}.pdf`;
+            zip.file(filename, doc.output('blob'));
+            successCount++;
+            log(`✓ ${filename}`, 'ok');
+
+        } catch (err) {
+            log(`✗ Baris ${i+1} ERROR: ${err.message}`, 'err');
+        }
+
+        if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+
+    setProgress(total, total, 'Membuat file ZIP...');
+    log(`📦 Menggabungkan ${successCount} file PDF ke ZIP...`, 'info');
+
+    const content = await zip.generateAsync(
+        { type: 'blob' },
+        (meta) => {
+            setProgress(total, total, `Kompresi ZIP: ${Math.round(meta.percent)}%`);
+        }
+    );
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    link.download = `sertifikat_massal_${Date.now()}.zip`;
+    link.click();
+
+    log(`🎉 Selesai! ${successCount} berhasil, ${skipCount} dilewati.`, 'ok');
+
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        document.getElementById('inlineProgress').classList.remove('active');
+    }, 800);
+
+    btn.disabled = false;
+    btn.textContent = '📦 Generate & Download ZIP';
+}
+
+function renderPageTexts(doc, row, page, pdfW, pdfH, markContent) {
+    const fieldsOnPage = textFields.filter(f => f.page === page && f.column);
+
+    fieldsOnPage.forEach(f => {
+        let text = formatValue(row[f.column], f.format);
+        text = (f.prefix || '') + text + (f.suffix || '');
+        if (!text.trim()) return;
+        markContent();
+
+        const x = pdfW * (f.posX / 100);
+        const y = pdfH * (f.posY / 100);
+
+        const style = f.fontStyle === 'bold' ? 'bold'
+                     : f.fontStyle === 'italic' ? 'italic'
+                     : f.fontStyle === 'bolditalic' ? 'bolditalic'
+                     : 'normal';
+
+        let fs = f.fontSize;
+        doc.setFont(f.fontFamily, style);
+        doc.setFontSize(fs);
+
+        if (f.autoFit) {
+            const maxWidth = pdfW * 0.85;
+            while (doc.getTextWidth(text) > maxWidth && fs > 6) {
+                fs -= 1;
+                doc.setFontSize(fs);
+            }
+        }
+
+        const rgb = hexToRgb(f.color);
+        doc.setTextColor(rgb.r, rgb.g, rgb.b);
+        doc.text(text, x, y, { align: 'center', baseline: 'middle' });
+    });
+}
+
+/* ==================== Progress Helper ==================== */
+function setProgress(current, total, statusText = '') {
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    document.getElementById('progressBarInner').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${current} / ${total} (${pct}%)`;
+    document.getElementById('loadingStatus').textContent = statusText;
+    document.getElementById('inlineProgressFill').style.width = pct + '%';
+    document.getElementById('inlineProgressPct').textContent = pct + '%';
+    document.getElementById('inlineProgressLabel').textContent = statusText;
+}
+
+function hexToRgb(hex) {
+    const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) }
+             : { r: 0, g: 0, b: 0 };
+}
+</script>
+</body>
+</html>
