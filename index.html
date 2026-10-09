@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Generator Sertifikat Massal v3</title>
+<title>Generator Sertifikat Massal</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -87,7 +87,8 @@
     button.success:hover { background: #2a8544; }
     button.danger { background: #ea4335; padding: 6px 12px; font-size: 12px; }
     button.danger:hover { background: #c5221f; }
-    button.small { padding: 6px 12px; font-size: 12px; }
+    button.purple { background: #9334e6; }
+    button.purple:hover { background: #7c2bc4; }
 
     .preview-box {
         border: 2px dashed #ccc;
@@ -98,7 +99,7 @@
         max-width: 100%;
         overflow: auto;
     }
-    .preview-box img, .preview-box canvas { max-width: 100%; display: block; margin: auto; }
+    .preview-box img { max-width: 100%; display: block; margin: auto; }
     .info {
         background: #e8f0fe;
         padding: 10px 15px;
@@ -126,7 +127,7 @@
     th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
     th { background: #f1f3f4; }
 
-    /* TEXT FIELDS BUILDER */
+    /* FIELD CARDS */
     .text-field-card {
         background: #fff;
         border: 1px solid #dadce0;
@@ -139,6 +140,13 @@
     .text-field-card.active {
         border-color: #1a73e8;
         box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+    }
+    .text-field-card.image-field {
+        border-left: 4px solid #9334e6;
+    }
+    .text-field-card.image-field.active {
+        border-color: #9334e6;
+        box-shadow: 0 0 0 3px rgba(147,52,230,0.15);
     }
     .text-field-header {
         display: flex;
@@ -155,6 +163,7 @@
         align-items: center;
         gap: 8px;
     }
+    .image-field .text-field-title { color: #9334e6; }
     .color-dot {
         width: 14px;
         height: 14px;
@@ -165,7 +174,7 @@
     .text-field-card .row { gap: 10px; }
     .text-field-card .col { min-width: 120px; }
 
-    /* CANVAS PREVIEW DRAG */
+    /* CANVAS */
     #canvasWrapper {
         position: relative;
         display: inline-block;
@@ -179,9 +188,8 @@
         user-select: none;
     }
     #previewCanvas.dragging { cursor: grabbing !important; }
-    #previewCanvas.dragover { cursor: grab; }
 
-    /* Halaman selector */
+    /* PAGE SELECTOR */
     .page-selector {
         display: flex;
         gap: 8px;
@@ -200,7 +208,7 @@
         border-color: #1557b0;
     }
 
-    /* LOADING OVERLAY */
+    /* LOADING */
     #loadingOverlay {
         display: none;
         position: fixed;
@@ -215,8 +223,7 @@
     }
     #loadingOverlay.active { display: flex; }
     .spinner {
-        width: 60px;
-        height: 60px;
+        width: 60px; height: 60px;
         border: 6px solid rgba(255,255,255,0.2);
         border-top-color: #1a73e8;
         border-radius: 50%;
@@ -258,17 +265,11 @@
     }
 
     #log {
-        background: #1e1e1e;
-        color: #d4d4d4;
-        font-family: 'Consolas', monospace;
-        font-size: 12px;
-        padding: 12px;
-        border-radius: 6px;
-        max-height: 220px;
-        overflow-y: auto;
-        margin-top: 15px;
-        white-space: pre-wrap;
-        display: none;
+        background: #1e1e1e; color: #d4d4d4;
+        font-family: 'Consolas', monospace; font-size: 12px;
+        padding: 12px; border-radius: 6px;
+        max-height: 220px; overflow-y: auto;
+        margin-top: 15px; white-space: pre-wrap; display: none;
     }
     #log.active { display: block; }
     .log-ok { color: #4ec9b0; }
@@ -292,7 +293,6 @@
         border-radius: 4px;
     }
 
-    /* PAGE SETTINGS */
     .page-settings {
         background: #fff;
         border: 1px solid #dadce0;
@@ -304,9 +304,45 @@
         font-weight: 600;
         color: #1a73e8;
         margin-bottom: 10px;
+    }
+
+    /* TABS untuk jenis field */
+    .field-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 15px;
+    }
+    .field-tab {
+        background: none;
+        color: #666;
+        border: none;
+        border-radius: 0;
+        padding: 10px 20px;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        font-weight: 500;
+    }
+    .field-tab:hover { background: #f5f5f5; color: #333; }
+    .field-tab.active {
+        color: #1a73e8;
+        border-bottom-color: #1a73e8;
+        background: none;
+    }
+
+    .image-thumb {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #fafafa;
+        padding: 3px;
+    }
+    .thumb-container {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 10px;
     }
 </style>
 </head>
@@ -323,8 +359,8 @@
 </div>
 
 <div class="container">
-    <h1>🎓 Generator Sertifikat Massal <span class="badge new">v3</span></h1>
-    <p style="color:#666;">Drag & drop teks + multi halaman + nomor sertifikat otomatis.</p>
+    <h1>🎓 Generator Sertifikat Massal <span class="badge new">v4</span></h1>
+    <p style="color:#666;">Drag & drop + multi halaman + tanda tangan + cap/stempel.</p>
 
     <!-- STEP 1: Template -->
     <div class="step">
@@ -345,21 +381,18 @@
         <div id="excelPreview"></div>
     </div>
 
-    <!-- STEP 3: Pages & Text Fields -->
+    <!-- STEP 3: Fields -->
     <div class="step">
-        <h2><span class="step-num">3</span> Halaman & Teks Sertifikat</h2>
+        <h2><span class="step-num">3</span> Halaman, Teks & Gambar</h2>
 
-        <!-- PAGE SETTINGS -->
         <div class="page-settings">
-            <div class="page-settings-title">
-                <span>📄 Pengaturan Halaman</span>
-            </div>
+            <div class="page-settings-title">📄 Pengaturan Halaman</div>
             <div class="row">
                 <div class="col">
                     <label>Jumlah Halaman per Sertifikat</label>
                     <select id="pageCount" onchange="onPageCountChange()">
                         <option value="1">1 Halaman</option>
-                        <option value="2">2 Halaman (opsional)</option>
+                        <option value="2">2 Halaman</option>
                     </select>
                 </div>
                 <div class="col" id="page2TemplateCol" style="display:none;">
@@ -370,24 +403,41 @@
             </div>
         </div>
 
-        <!-- PAGE SELECTOR -->
         <div class="page-selector" id="pageSelector">
             <button class="page-btn active" onclick="selectPage(1)">Halaman 1</button>
             <button class="page-btn" id="page2Btn" onclick="selectPage(2)" style="display:none;">Halaman 2</button>
         </div>
 
         <div class="hint">
-            💡 <b>Cara pakai:</b> Klik teks di preview lalu <b>drag dengan mouse</b> untuk memindahkan posisi.
-            Atau atur manual lewat kolom X/Y di bawah.
+            💡 <b>Cara pakai:</b> Klik elemen di preview lalu <b>drag dengan mouse</b> untuk memindahkan posisi.
+            Teks biru, gambar ungu.
         </div>
 
-        <div id="textFieldsContainer"></div>
+        <!-- TABS -->
+        <div class="field-tabs">
+            <button class="field-tab active" id="tabTexts" onclick="switchTab('texts')">📝 Teks</button>
+            <button class="field-tab" id="tabImages" onclick="switchTab('images')">🖼️ Gambar (TTD/Cap)</button>
+        </div>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-            <button class="secondary" onclick="addTextField('nama')">➕ Teks Nama</button>
-            <button class="secondary" onclick="addTextField('nim')">➕ Teks NIM</button>
-            <button class="secondary" onclick="addTextField('nomor')">➕ Nomor Sertifikat</button>
-            <button class="secondary" onclick="addTextField('custom')">➕ Teks Custom</button>
+        <!-- CONTENT: TEXTS -->
+        <div id="tabContentTexts">
+            <div id="textFieldsContainer"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
+                <button class="secondary" onclick="addTextField('nama')">➕ Teks Nama</button>
+                <button class="secondary" onclick="addTextField('nim')">➕ Teks NIM</button>
+                <button class="secondary" onclick="addTextField('nomor')">➕ Nomor Sertifikat</button>
+                <button class="secondary" onclick="addTextField('custom')">➕ Teks Custom</button>
+            </div>
+        </div>
+
+        <!-- CONTENT: IMAGES -->
+        <div id="tabContentImages" style="display:none;">
+            <div id="imageFieldsContainer"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
+                <button class="purple" onclick="addImageField('ttd')">✍️ Tambah Tanda Tangan</button>
+                <button class="purple" onclick="addImageField('cap')">🔴 Tambah Cap/Stempel</button>
+                <button class="purple" onclick="addImageField('custom')">🖼️ Tambah Gambar Custom</button>
+            </div>
         </div>
     </div>
 
@@ -395,7 +445,7 @@
     <div class="step">
         <h2><span class="step-num">4</span> Preview Sertifikat</h2>
         <p style="font-size:13px;color:#888;margin-top:0;">
-            🖱️ Klik & tahan teks lalu geser dengan mouse untuk memindahkan posisi.
+            🖱️ Klik & tahan elemen lalu geser dengan mouse. Bisa juga drag sudut untuk resize.
         </p>
         <div class="preview-box">
             <div id="canvasWrapper">
@@ -429,23 +479,38 @@
 const { jsPDF } = window.jspdf;
 
 let templateImage = null;
-let templateImage2 = null; // Halaman 2
+let templateImage2 = null;
 let excelData = [];
 let excelHeaders = [];
-let textFields = []; // { id, page, type, column, format, posX, posY, ... }
+let textFields = [];   // { id, page, kind:'text', type, column, posX, posY, ... }
+let imageFields = [];  // { id, page, kind:'image', type, imgSrc, imgEl, posX, posY, widthPct, rotation }
 let fieldIdCounter = 0;
-let currentPage = 1; // Halaman yang sedang diedit
-let activeFieldId = null; // Field yang sedang disorot
+let currentPage = 1;
+let activeFieldId = null;
+let activeTab = 'texts'; // 'texts' | 'images'
 
 // Drag state
 let dragState = {
     isDragging: false,
+    isResizing: false,
     fieldId: null,
+    fieldKind: null,
     startMouseX: 0,
     startMouseY: 0,
     startPosX: 0,
-    startPosY: 0
+    startPosY: 0,
+    startWidthPct: 0,
+    resizeHandle: null
 };
+
+/* ==================== TAB SWITCH ==================== */
+function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabTexts').classList.toggle('active', tab === 'texts');
+    document.getElementById('tabImages').classList.toggle('active', tab === 'images');
+    document.getElementById('tabContentTexts').style.display = tab === 'texts' ? 'block' : 'none';
+    document.getElementById('tabContentImages').style.display = tab === 'images' ? 'block' : 'none';
+}
 
 /* ==================== PAGE SETTINGS ==================== */
 function onPageCountChange() {
@@ -459,12 +524,10 @@ function onPageCountChange() {
     } else {
         page2Btn.style.display = 'none';
         page2TemplateCol.style.display = 'none';
-        // Pindah ke halaman 1 jika sedang di halaman 2
         if (currentPage === 2) selectPage(1);
-        // Hapus field di halaman 2
-        const before = textFields.length;
         textFields = textFields.filter(f => f.page !== 2);
-        if (textFields.length !== before) renderTextFields();
+        imageFields = imageFields.filter(f => f.page !== 2);
+        renderAll();
     }
     updatePreview();
     checkReady();
@@ -475,11 +538,10 @@ function selectPage(page) {
     document.querySelectorAll('.page-btn').forEach((btn, i) => {
         btn.classList.toggle('active', (i + 1) === page);
     });
-    renderTextFields();
+    renderAll();
     updatePreview();
 }
 
-/* ==================== PAGE 2 TEMPLATE ==================== */
 document.getElementById('page2TemplateFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -497,67 +559,55 @@ document.getElementById('page2TemplateFile').addEventListener('change', function
     reader.readAsDataURL(file);
 });
 
-/* ==================== TEXT FIELD BUILDER ==================== */
+/* ==================== TEXT FIELDS ==================== */
 function addTextField(type = 'custom') {
     const id = ++fieldIdCounter;
     const page = currentPage;
 
-    let defaultConfig = {
-        id,
-        page,
-        type,
-        column: '',
-        format: 'asis',
-        posX: 50,
-        posY: 50,
+    let config = {
+        id, page, kind: 'text', type,
+        column: '', format: 'asis',
+        posX: 50, posY: 50,
         fontSize: 36,
         fontFamily: 'helvetica',
         fontStyle: 'bold',
         color: '#000000',
         autoFit: true,
-        prefix: '',
-        suffix: ''
+        prefix: '', suffix: ''
     };
 
-    // Hitung Y otomatis berdasarkan jumlah field di halaman yang sama
-    const fieldsOnPage = textFields.filter(f => f.page === page).length;
-    defaultConfig.posY = 40 + (fieldsOnPage * 10);
+    const count = textFields.filter(f => f.page === page).length;
+    config.posY = 40 + (count * 10);
 
     if (type === 'nama') {
-        defaultConfig.fontSize = 36;
-        defaultConfig.label = 'Nama Peserta';
+        config.fontSize = 36; config.label = 'Nama Peserta';
     } else if (type === 'nim') {
-        defaultConfig.fontSize = 18;
-        defaultConfig.fontStyle = 'normal';
-        defaultConfig.label = 'NIM';
+        config.fontSize = 18; config.fontStyle = 'normal'; config.label = 'NIM';
     } else if (type === 'nomor') {
-        defaultConfig.fontSize = 14;
-        defaultConfig.fontStyle = 'normal';
-        defaultConfig.label = 'Nomor Sertifikat';
-        defaultConfig.prefix = 'No: ';
+        config.fontSize = 14; config.fontStyle = 'normal';
+        config.label = 'Nomor Sertifikat'; config.prefix = 'No: ';
     } else {
-        defaultConfig.fontSize = 16;
-        defaultConfig.label = 'Teks Custom';
+        config.fontSize = 16; config.label = 'Teks Custom';
     }
 
     if (excelHeaders.length > 0) {
         const keyword = type === 'nama' ? 'nama' : type === 'nim' ? 'nim' : type === 'nomor' ? 'nomor' : '';
         if (keyword) {
             const found = excelHeaders.find(h => h.toLowerCase().includes(keyword));
-            if (found) defaultConfig.column = found;
+            if (found) config.column = found;
         }
-        if (!defaultConfig.column) defaultConfig.column = excelHeaders[0];
+        if (!config.column) config.column = excelHeaders[0];
     }
 
-    textFields.push(defaultConfig);
-    renderTextFields();
+    textFields.push(config);
+    renderAll();
     updatePreview();
 }
 
 function removeTextField(id) {
     textFields = textFields.filter(f => f.id !== id);
     if (activeFieldId === id) activeFieldId = null;
-    renderTextFields();
+    renderAll();
     updatePreview();
 }
 
@@ -568,8 +618,77 @@ function updateField(id, key, value) {
 
 function focusField(id) {
     activeFieldId = id;
-    renderTextFields();
+    renderAll();
     updatePreview();
+}
+
+/* ==================== IMAGE FIELDS ==================== */
+function addImageField(type = 'custom') {
+    const id = ++fieldIdCounter;
+    const page = currentPage;
+
+    let config = {
+        id, page, kind: 'image', type,
+        label: type === 'ttd' ? 'Tanda Tangan' : type === 'cap' ? 'Cap/Stempel' : 'Gambar Custom',
+        imgSrc: null,
+        imgEl: null,
+        posX: 50, posY: 80,
+        widthPct: 15,   // lebar gambar dalam % dari lebar sertifikat
+        rotation: 0,    // derajat
+        opacity: 1
+    };
+
+    // Posisi default bertingkat
+    const count = imageFields.filter(f => f.page === page).length;
+    if (type === 'ttd') { config.posX = 25; config.posY = 82; config.widthPct = 15; }
+    else if (type === 'cap') { config.posX = 30; config.posY = 80; config.widthPct = 12; }
+    else { config.posX = 70; config.posY = 50; config.widthPct = 15; }
+
+    config.posX += count * 5;
+
+    imageFields.push(config);
+    switchTab('images');
+    renderAll();
+    updatePreview();
+}
+
+function removeImageField(id) {
+    imageFields = imageFields.filter(f => f.id !== id);
+    if (activeFieldId === id) activeFieldId = null;
+    renderAll();
+    updatePreview();
+}
+
+function updateImageField(id, key, value) {
+    const f = imageFields.find(x => x.id === id);
+    if (f) { f[key] = value; updatePreview(); }
+}
+
+function onImageUpload(id, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+            const f = imageFields.find(x => x.id === id);
+            if (f) {
+                f.imgSrc = ev.target.result;
+                f.imgEl = img;
+                renderAll();
+                updatePreview();
+            }
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ==================== RENDER ALL ==================== */
+function renderAll() {
+    renderTextFields();
+    renderImageFields();
+    checkReady();
 }
 
 function renderTextFields() {
@@ -579,8 +698,7 @@ function renderTextFields() {
     const fieldsOnPage = textFields.filter(f => f.page === currentPage);
 
     if (fieldsOnPage.length === 0) {
-        container.innerHTML = `<div class="warn">Belum ada teks di halaman ${currentPage}. Klik tombol di bawah untuk menambah.</div>`;
-        checkReady();
+        container.innerHTML = `<div class="warn">Belum ada teks di halaman ${currentPage}.</div>`;
         return;
     }
 
@@ -588,6 +706,7 @@ function renderTextFields() {
         const card = document.createElement('div');
         card.className = 'text-field-card' + (activeFieldId === f.id ? ' active' : '');
         card.dataset.fieldId = f.id;
+        card.dataset.kind = 'text';
 
         const colOptions = excelHeaders.map(h =>
             `<option value="${h}" ${f.column === h ? 'selected' : ''}>${h}</option>`
@@ -622,13 +741,11 @@ function renderTextFields() {
                 </div>
                 <div class="col">
                     <label>Prefix</label>
-                    <input type="text" value="${f.prefix}" placeholder="cth: No: "
-                        oninput="updateField(${f.id}, 'prefix', this.value)">
+                    <input type="text" value="${f.prefix}" oninput="updateField(${f.id}, 'prefix', this.value)">
                 </div>
                 <div class="col">
                     <label>Suffix</label>
-                    <input type="text" value="${f.suffix}" placeholder="cth: /2025"
-                        oninput="updateField(${f.id}, 'suffix', this.value)">
+                    <input type="text" value="${f.suffix}" oninput="updateField(${f.id}, 'suffix', this.value)">
                 </div>
             </div>
 
@@ -670,8 +787,7 @@ function renderTextFields() {
                 </div>
                 <div class="col">
                     <label>Warna</label>
-                    <input type="color" value="${f.color}"
-                        oninput="updateField(${f.id}, 'color', this.value)">
+                    <input type="color" value="${f.color}" oninput="updateField(${f.id}, 'color', this.value)">
                 </div>
                 <div class="col">
                     <label>Auto-fit</label>
@@ -684,11 +800,79 @@ function renderTextFields() {
         `;
         container.appendChild(card);
     });
-
-    checkReady();
 }
 
-/* ==================== STEP 1: Template 1 ==================== */
+function renderImageFields() {
+    const container = document.getElementById('imageFieldsContainer');
+    container.innerHTML = '';
+
+    const fieldsOnPage = imageFields.filter(f => f.page === currentPage);
+
+    if (fieldsOnPage.length === 0) {
+        container.innerHTML = `<div class="warn">Belum ada gambar (TTD/Cap) di halaman ${currentPage}.</div>`;
+        return;
+    }
+
+    fieldsOnPage.forEach((f, idx) => {
+        const card = document.createElement('div');
+        card.className = 'text-field-card image-field' + (activeFieldId === f.id ? ' active' : '');
+        card.dataset.fieldId = f.id;
+        card.dataset.kind = 'image';
+
+        const thumbHtml = f.imgSrc
+            ? `<img src="${f.imgSrc}" class="image-thumb" alt="thumb">`
+            : `<div class="image-thumb" style="display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px;">no img</div>`;
+
+        card.innerHTML = `
+            <div class="text-field-header" onclick="focusField(${f.id})">
+                <span class="text-field-title">
+                    🖼️ ${f.label} #${idx+1}
+                    <span style="font-weight:400;font-size:11px;color:#888;">(Hal. ${f.page})</span>
+                </span>
+                <button class="danger" onclick="event.stopPropagation();removeImageField(${f.id})">🗑 Hapus</button>
+            </div>
+
+            <div class="thumb-container" style="margin-bottom:10px;">
+                ${thumbHtml}
+                <div style="flex:1;">
+                    <label>Upload Gambar (PNG transparan disarankan)</label>
+                    <input type="file" accept="image/*" onchange="onImageUpload(${f.id}, this)">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Posisi X (%)</label>
+                    <input type="number" value="${f.posX.toFixed(1)}" min="0" max="100" step="0.1"
+                        oninput="updateImageField(${f.id}, 'posX', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Posisi Y (%)</label>
+                    <input type="number" value="${f.posY.toFixed(1)}" min="0" max="100" step="0.1"
+                        oninput="updateImageField(${f.id}, 'posY', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Lebar (%)</label>
+                    <input type="number" value="${f.widthPct}" min="1" max="100" step="0.5"
+                        oninput="updateImageField(${f.id}, 'widthPct', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Rotasi (°)</label>
+                    <input type="number" value="${f.rotation}" min="-180" max="180" step="1"
+                        oninput="updateImageField(${f.id}, 'rotation', parseFloat(this.value))">
+                </div>
+                <div class="col">
+                    <label>Opacity</label>
+                    <input type="number" value="${f.opacity}" min="0.1" max="1" step="0.05"
+                        oninput="updateImageField(${f.id}, 'opacity', parseFloat(this.value))">
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+/* ==================== TEMPLATE 1 ==================== */
 document.getElementById('templateFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -707,7 +891,7 @@ document.getElementById('templateFile').addEventListener('change', function(e) {
     reader.readAsDataURL(file);
 });
 
-/* ==================== STEP 2: Excel ==================== */
+/* ==================== EXCEL ==================== */
 document.getElementById('excelFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -738,11 +922,9 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
         textFields.forEach(f => {
             if (!f.column && excelHeaders.length > 0) f.column = excelHeaders[0];
         });
-        renderTextFields();
+        renderAll();
 
-        if (textFields.length === 0) {
-            addTextField('nama');
-        }
+        if (textFields.length === 0) addTextField('nama');
 
         updatePreview();
         checkReady();
@@ -762,13 +944,11 @@ function formatValue(val, format) {
     }
 }
 
-/* ==================== CANVAS PREVIEW ==================== */
+/* ==================== PREVIEW ==================== */
 function getCurrentTemplate() {
     if (currentPage === 2 && templateImage2) return templateImage2;
     return templateImage;
 }
-
-let canvasScaleInfo = { w: 0, h: 0 };
 
 function updatePreview() {
     const canvas = document.getElementById('previewCanvas');
@@ -786,7 +966,6 @@ function updatePreview() {
                 : 'Upload template terlebih dahulu',
             400, 250
         );
-        canvasScaleInfo = { w: 800, h: 500 };
         return;
     }
 
@@ -796,16 +975,21 @@ function updatePreview() {
     if (w > maxW) { w = maxW; h = w * ratio; }
     canvas.width = w;
     canvas.height = h;
-    canvasScaleInfo = { w, h };
 
     ctx.drawImage(img, 0, 0, w, h);
 
+    // ============ RENDER IMAGES DULU (di belakang teks) ============
+    const imgsOnPage = imageFields.filter(f => f.page === currentPage);
+    imgsOnPage.forEach(f => {
+        if (!f.imgEl) return;
+        drawImageField(ctx, f, w, h, true);
+    });
+
+    // ============ RENDER TEXTS ============
     const pxPerMm = w / 297;
+    const textsOnPage = textFields.filter(f => f.page === currentPage);
 
-    // Ambil field di halaman ini
-    const fieldsOnPage = textFields.filter(f => f.page === currentPage);
-
-    fieldsOnPage.forEach(f => {
+    textsOnPage.forEach(f => {
         let text = '';
         if (excelData.length > 0 && f.column) {
             text = formatValue(excelData[0][f.column], f.format);
@@ -838,25 +1022,18 @@ function updatePreview() {
             }
         }
 
-        // Hitung bounding box
+        // Highlight
         const metrics = ctx.measureText(text);
         const textW = metrics.width;
         const textH = fontSizePx;
         const padding = 6;
-        const boxX = x - textW / 2 - padding;
-        const boxY = y - textH / 2 - padding;
-        const boxW = textW + padding * 2;
-        const boxH = textH + padding * 2;
-
-        // Highlight jika field aktif
-        const isActive = activeFieldId === f.id;
-        if (isActive) {
+        if (activeFieldId === f.id) {
             ctx.fillStyle = 'rgba(26,115,232,0.12)';
-            ctx.fillRect(boxX, boxY, boxW, boxH);
+            ctx.fillRect(x - textW/2 - padding, y - textH/2 - padding, textW + padding*2, textH + padding*2);
             ctx.strokeStyle = '#1a73e8';
             ctx.lineWidth = 2;
             ctx.setLineDash([]);
-            ctx.strokeRect(boxX, boxY, boxW, boxH);
+            ctx.strokeRect(x - textW/2 - padding, y - textH/2 - padding, textW + padding*2, textH + padding*2);
         }
 
         ctx.fillStyle = f.color;
@@ -865,7 +1042,7 @@ function updatePreview() {
         ctx.fillText(text, x, y);
 
         // Garis pemandu tipis
-        ctx.strokeStyle = 'rgba(255,0,0,0.2)';
+        ctx.strokeStyle = 'rgba(255,0,0,0.15)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -874,15 +1051,73 @@ function updatePreview() {
         ctx.stroke();
         ctx.setLineDash([]);
     });
-
-    updateCursorStyle();
 }
 
-/* ==================== DRAG & DROP ==================== */
+function drawImageField(ctx, f, w, h, showHandles) {
+    if (!f.imgEl) return;
+
+    const imgW = w * (f.widthPct / 100);
+    const imgH = imgW * (f.imgEl.height / f.imgEl.width);
+    const x = w * (f.posX / 100);
+    const y = h * (f.posY / 100);
+
+    ctx.save();
+    ctx.globalAlpha = f.opacity != null ? f.opacity : 1;
+    ctx.translate(x, y);
+    ctx.rotate(f.rotation * Math.PI / 180);
+    ctx.drawImage(f.imgEl, -imgW/2, -imgH/2, imgW, imgH);
+    ctx.restore();
+
+    // Highlight & handle
+    if (showHandles && activeFieldId === f.id) {
+        const corners = getRotatedCorners(x, y, imgW, imgH, f.rotation);
+
+        ctx.save();
+        ctx.strokeStyle = '#9334e6';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 4; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Handle resize di sudut kanan bawah
+        const handle = corners[2];
+        ctx.fillStyle = '#9334e6';
+        ctx.beginPath();
+        ctx.arc(handle.x, handle.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⤡', handle.x, handle.y);
+        ctx.restore();
+    }
+}
+
+function getRotatedCorners(cx, cy, w, h, rotationDeg) {
+    const rad = rotationDeg * Math.PI / 180;
+    const cos = Math.cos(rad), sin = Math.sin(rad);
+    const hw = w / 2, hh = h / 2;
+    const pts = [
+        { x: -hw, y: -hh },
+        { x:  hw, y: -hh },
+        { x:  hw, y:  hh },
+        { x: -hw, y:  hh }
+    ];
+    return pts.map(p => ({
+        x: cx + p.x * cos - p.y * sin,
+        y: cy + p.x * sin + p.y * cos
+    }));
+}
+
+/* ==================== HIT TEST ==================== */
 function getCanvasMousePos(evt) {
     const canvas = document.getElementById('previewCanvas');
     const rect = canvas.getBoundingClientRect();
-    // Sesuaikan dengan skala CSS vs canvas internal
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
@@ -897,13 +1132,13 @@ function hitTestField(mouseX, mouseY) {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
+
+    // Cek text fields dulu (prioritas atas)
     const pxPerMm = w / 297;
+    const textsOnPage = textFields.filter(f => f.page === currentPage);
 
-    const fieldsOnPage = textFields.filter(f => f.page === currentPage);
-
-    // Iterasi dari belakang supaya field paling atas dapat prioritas
-    for (let i = fieldsOnPage.length - 1; i >= 0; i--) {
-        const f = fieldsOnPage[i];
+    for (let i = textsOnPage.length - 1; i >= 0; i--) {
+        const f = textsOnPage[i];
         let text = '';
         if (excelData.length > 0 && f.column) {
             text = formatValue(excelData[0][f.column], f.format);
@@ -943,48 +1178,93 @@ function hitTestField(mouseX, mouseY) {
         const boxH = textH + padding * 2;
 
         if (mouseX >= boxX && mouseX <= boxX + boxW && mouseY >= boxY && mouseY <= boxY + boxH) {
-            return f.id;
+            return { id: f.id, kind: 'text', handle: null };
         }
     }
+
+    // Cek image fields (prioritas bawah)
+    const imgsOnPage = imageFields.filter(f => f.page === currentPage);
+
+    for (let i = imgsOnPage.length - 1; i >= 0; i--) {
+        const f = imgsOnPage[i];
+        if (!f.imgEl) continue;
+
+        const imgW = w * (f.widthPct / 100);
+        const imgH = imgW * (f.imgEl.height / f.imgEl.width);
+        const x = w * (f.posX / 100);
+        const y = h * (f.posY / 100);
+
+        const corners = getRotatedCorners(x, y, imgW, imgH, f.rotation);
+        const handle = corners[2];
+
+        // Cek handle resize dulu
+        const distHandle = Math.hypot(mouseX - handle.x, mouseY - handle.y);
+        if (activeFieldId === f.id && distHandle < 12) {
+            return { id: f.id, kind: 'image', handle: 'resize' };
+        }
+
+        // Cek apakah dalam polygon (rotated rect)
+        if (pointInPolygon(mouseX, mouseY, corners)) {
+            return { id: f.id, kind: 'image', handle: null };
+        }
+    }
+
     return null;
 }
 
-function updateCursorStyle() {
-    const canvas = document.getElementById('previewCanvas');
-    canvas.classList.remove('dragging', 'dragover');
-    // cursor akan diubah dinamis saat mousemove
+function pointInPolygon(px, py, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i].x, yi = poly[i].y;
+        const xj = poly[j].x, yj = poly[j].y;
+        const intersect = ((yi > py) !== (yj > py)) &&
+                         (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
 }
 
-// Mouse down
+/* ==================== POINTER EVENTS ==================== */
 const canvas = document.getElementById('previewCanvas');
 
 function onPointerDown(evt) {
     const pos = getCanvasMousePos(evt);
-    const hitId = hitTestField(pos.x, pos.y);
+    const hit = hitTestField(pos.x, pos.y);
 
-    if (hitId) {
-        const f = textFields.find(x => x.id === hitId);
+    if (hit) {
+        activeFieldId = hit.id;
+
+        const isText = hit.kind === 'text';
+        const f = isText
+            ? textFields.find(x => x.id === hit.id)
+            : imageFields.find(x => x.id === hit.id);
+
         if (f) {
-            activeFieldId = hitId;
-            dragState.isDragging = true;
-            dragState.fieldId = hitId;
+            dragState.isDragging = !hit.handle;
+            dragState.isResizing = hit.handle === 'resize';
+            dragState.fieldId = hit.id;
+            dragState.fieldKind = hit.kind;
             dragState.startMouseX = pos.x;
             dragState.startMouseY = pos.y;
             dragState.startPosX = f.posX;
             dragState.startPosY = f.posY;
+            dragState.startWidthPct = f.widthPct || 0;
 
             canvas.classList.add('dragging');
-            canvas.style.cursor = 'grabbing';
+            canvas.style.cursor = hit.handle ? 'nwse-resize' : 'grabbing';
 
-            renderTextFields(); // highlight card
+            // Auto pindah tab sesuai jenis field
+            if (hit.kind === 'image' && activeTab !== 'images') switchTab('images');
+            if (hit.kind === 'text' && activeTab !== 'texts') switchTab('texts');
+
+            renderAll();
             updatePreview();
             evt.preventDefault();
         }
     } else {
-        // Klik di area kosong: hilangkan highlight
         if (activeFieldId !== null) {
             activeFieldId = null;
-            renderTextFields();
+            renderAll();
             updatePreview();
         }
     }
@@ -993,51 +1273,81 @@ function onPointerDown(evt) {
 function onPointerMove(evt) {
     const pos = getCanvasMousePos(evt);
 
-    if (dragState.isDragging) {
-        const f = textFields.find(x => x.id === dragState.fieldId);
-        if (!f) return;
-
+    if (dragState.isDragging || dragState.isResizing) {
         const w = canvas.width, h = canvas.height;
-        const dx = (pos.x - dragState.startMouseX) / w * 100; // dalam persen
-        const dy = (pos.y - dragState.startMouseY) / h * 100;
 
-        f.posX = Math.max(0, Math.min(100, dragState.startPosX + dx));
-        f.posY = Math.max(0, Math.min(100, dragState.startPosY + dy));
+        if (dragState.fieldKind === 'text') {
+            const f = textFields.find(x => x.id === dragState.fieldId);
+            if (!f) return;
+            const dx = (pos.x - dragState.startMouseX) / w * 100;
+            const dy = (pos.y - dragState.startMouseY) / h * 100;
+            f.posX = Math.max(0, Math.min(100, dragState.startPosX + dx));
+            f.posY = Math.max(0, Math.min(100, dragState.startPosY + dy));
+            updateCardInputs(f.id, f.posX, f.posY, null);
+        } else {
+            const f = imageFields.find(x => x.id === dragState.fieldId);
+            if (!f) return;
 
-        // Update UI input di card
-        const card = document.querySelector(`.text-field-card[data-field-id="${f.id}"]`);
-        if (card) {
-            const inputs = card.querySelectorAll('input[type="number"]');
-            if (inputs.length >= 2) {
-                inputs[0].value = f.posX.toFixed(1);
-                inputs[1].value = f.posY.toFixed(1);
+            if (dragState.isResizing) {
+                // Hitung jarak dari pusat ke mouse → ubah jadi widthPct
+                const cx = w * (f.posX / 100);
+                const cy = h * (f.posY / 100);
+                const dist = Math.hypot(pos.x - cx, pos.y - cy);
+                // Asumsi handle di sudut → diagonal = sqrt(w^2 + h^2)/2
+                // Cukup pakai dist * 2 sebagai diagonal
+                const diagPx = dist * 2;
+                const aspect = f.imgEl ? (f.imgEl.height / f.imgEl.width) : 1;
+                // diagonal^2 = w^2 + h^2 = w^2 (1 + aspect^2)
+                const newW = diagPx / Math.sqrt(1 + aspect * aspect);
+                const newWidthPct = (newW / w) * 100;
+                f.widthPct = Math.max(1, Math.min(100, newWidthPct));
+                updateCardInputs(f.id, null, null, f.widthPct);
+            } else {
+                const dx = (pos.x - dragState.startMouseX) / w * 100;
+                const dy = (pos.y - dragState.startMouseY) / h * 100;
+                f.posX = Math.max(-20, Math.min(120, dragState.startPosX + dx));
+                f.posY = Math.max(-20, Math.min(120, dragState.startPosY + dy));
+                updateCardInputs(f.id, f.posX, f.posY, null);
             }
         }
 
         updatePreview();
         evt.preventDefault();
     } else {
-        // Hover: ubah cursor
-        const hitId = hitTestField(pos.x, pos.y);
-        canvas.style.cursor = hitId ? 'grab' : 'default';
+        const hit = hitTestField(pos.x, pos.y);
+        if (hit) {
+            canvas.style.cursor = hit.handle ? 'nwse-resize' : 'grab';
+        } else {
+            canvas.style.cursor = 'default';
+        }
     }
 }
 
 function onPointerUp(evt) {
-    if (dragState.isDragging) {
+    if (dragState.isDragging || dragState.isResizing) {
         dragState.isDragging = false;
+        dragState.isResizing = false;
         dragState.fieldId = null;
+        dragState.fieldKind = null;
         canvas.classList.remove('dragging');
         canvas.style.cursor = 'default';
+        renderAll(); // refresh input angka
     }
 }
 
-// Mouse events
+function updateCardInputs(id, x, y, widthPct) {
+    const card = document.querySelector(`.text-field-card[data-field-id="${id}"]`);
+    if (!card) return;
+    const inputs = card.querySelectorAll('input[type="number"]');
+    // Pola: 0=X, 1=Y, (2=fontSize OR 2=widthPct)
+    if (x !== null && inputs[0]) inputs[0].value = x.toFixed(1);
+    if (y !== null && inputs[1]) inputs[1].value = y.toFixed(1);
+    if (widthPct !== null && inputs[2]) inputs[2].value = widthPct.toFixed(1);
+}
+
 canvas.addEventListener('mousedown', onPointerDown);
 window.addEventListener('mousemove', onPointerMove);
 window.addEventListener('mouseup', onPointerUp);
-
-// Touch events (untuk tablet / HP)
 canvas.addEventListener('touchstart', onPointerDown, { passive: false });
 window.addEventListener('touchmove', onPointerMove, { passive: false });
 window.addEventListener('touchend', onPointerUp);
@@ -1046,7 +1356,7 @@ window.addEventListener('touchend', onPointerUp);
 function checkReady() {
     const pageCount = parseInt(document.getElementById('pageCount').value);
     let ready = templateImage && excelData.length > 0 &&
-                textFields.length > 0 &&
+                (textFields.length > 0 || imageFields.length > 0) &&
                 textFields.some(f => f.column);
     if (pageCount === 2 && !templateImage2) ready = false;
     document.getElementById('generateBtn').disabled = !ready;
@@ -1063,14 +1373,12 @@ function log(msg, cls = '') {
     el.scrollTop = el.scrollHeight;
 }
 
-/* ==================== GENERATE ALL ==================== */
+/* ==================== GENERATE ==================== */
 async function generateAll() {
     if (!templateImage) return alert('Upload template dulu!');
-
     const pageCount = parseInt(document.getElementById('pageCount').value);
     if (pageCount === 2 && !templateImage2) return alert('Upload template halaman 2 dulu!');
     if (excelData.length === 0) return alert('Upload Excel dulu!');
-    if (textFields.length === 0) return alert('Tambah minimal 1 teks!');
 
     const btn = document.getElementById('generateBtn');
     btn.disabled = true;
@@ -1087,7 +1395,6 @@ async function generateAll() {
     setProgress(0, total, 'Menyiapkan...');
     log(`🚀 Mulai generate ${total} sertifikat (${pageCount} halaman)...`, 'info');
 
-    // Ukuran PDF dari template 1 (asumsi halaman 2 sama rasio)
     const imgW = templateImage.width;
     const imgH = templateImage.height;
     const aspect = imgW / imgH;
@@ -1117,15 +1424,15 @@ async function generateAll() {
 
             let hasContent = false;
 
-            // === HALAMAN 1 ===
+            // Halaman 1
             doc.addImage(imgData1, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
-            renderPageTexts(doc, row, 1, pdfW, pdfH, () => { hasContent = true; });
+            renderPage(doc, row, 1, pdfW, pdfH, () => { hasContent = true; });
 
-            // === HALAMAN 2 (jika ada) ===
+            // Halaman 2
             if (pageCount === 2 && imgData2) {
                 doc.addPage([pdfW, pdfH], pdfW > pdfH ? 'landscape' : 'portrait');
                 doc.addImage(imgData2, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
-                renderPageTexts(doc, row, 2, pdfW, pdfH, () => { hasContent = true; });
+                renderPage(doc, row, 2, pdfW, pdfH, () => { hasContent = true; });
             }
 
             if (!hasContent) {
@@ -1156,9 +1463,7 @@ async function generateAll() {
 
     const content = await zip.generateAsync(
         { type: 'blob' },
-        (meta) => {
-            setProgress(total, total, `Kompresi ZIP: ${Math.round(meta.percent)}%`);
-        }
+        (meta) => setProgress(total, total, `Kompresi ZIP: ${Math.round(meta.percent)}%`)
     );
 
     const link = document.createElement('a');
@@ -1177,10 +1482,36 @@ async function generateAll() {
     btn.textContent = '📦 Generate & Download ZIP';
 }
 
-function renderPageTexts(doc, row, page, pdfW, pdfH, markContent) {
-    const fieldsOnPage = textFields.filter(f => f.page === page && f.column);
+function renderPage(doc, row, page, pdfW, pdfH, markContent) {
+    // === GAMBAR (di belakang teks) ===
+    const imgsOnPage = imageFields.filter(f => f.page === page);
+    imgsOnPage.forEach(f => {
+        if (!f.imgSrc || !f.imgEl) return;
+        markContent();
 
-    fieldsOnPage.forEach(f => {
+        const imgW = pdfW * (f.widthPct / 100);
+        const imgH = imgW * (f.imgEl.height / f.imgEl.width);
+        const cx = pdfW * (f.posX / 100);
+        const cy = pdfH * (f.posY / 100);
+        const x = cx - imgW / 2;
+        const y = cy - imgH / 2;
+
+        const ext = f.imgSrc.includes('data:image/png') ? 'PNG'
+                  : f.imgSrc.includes('data:image/jpeg') || f.imgSrc.includes('data:image/jpg') ? 'JPEG'
+                  : 'PNG';
+
+        // jsPDF bisa handle rotation via parameter (butuh versi 2.5+)
+        try {
+            doc.addImage(f.imgSrc, ext, x, y, imgW, imgH, undefined, 'FAST', f.rotation || 0);
+        } catch (e) {
+            // Fallback kalau rotation tidak didukung
+            doc.addImage(f.imgSrc, ext, x, y, imgW, imgH, undefined, 'FAST');
+        }
+    });
+
+    // === TEKS ===
+    const textsOnPage = textFields.filter(f => f.page === page && f.column);
+    textsOnPage.forEach(f => {
         let text = formatValue(row[f.column], f.format);
         text = (f.prefix || '') + text + (f.suffix || '');
         if (!text.trim()) return;
@@ -1212,7 +1543,7 @@ function renderPageTexts(doc, row, page, pdfW, pdfH, markContent) {
     });
 }
 
-/* ==================== Progress Helper ==================== */
+/* ==================== Helpers ==================== */
 function setProgress(current, total, statusText = '') {
     const pct = total > 0 ? Math.round((current / total) * 100) : 0;
     document.getElementById('progressBarInner').style.width = pct + '%';
