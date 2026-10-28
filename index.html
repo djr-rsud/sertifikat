@@ -2,174 +2,322 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Generator Sertifikat Massal</title>
+<title>Generator Sertifikat Massal v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-    * { box-sizing: border-box; }
-    body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        background: #f0f2f5;
-        margin: 0;
-        padding: 20px;
-        color: #333;
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --primary-light: #eff6ff;
+        --purple: #7c3aed;
+        --purple-dark: #6d28d9;
+        --success: #059669;
+        --danger: #dc2626;
+        --border: #e2e8f0;
+        --text: #1e293b;
+        --muted: #64748b;
     }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background-color: #eef2f7;
+        background-image:
+            radial-gradient(900px 520px at 8% -12%, #dbeafe 0%, transparent 60%),
+            radial-gradient(820px 520px at 100% 0%, #ede9fe 0%, transparent 55%);
+        background-attachment: fixed;
+        margin: 0;
+        padding: 32px 20px 64px;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+    }
+
     .container {
-        max-width: 1200px;
+        max-width: 1180px;
         margin: auto;
         background: #fff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 32px 40px 44px;
+        border-radius: 18px;
+        border: 1px solid rgba(226,232,240,0.9);
+        box-shadow: 0 12px 48px rgba(15,23,42,0.09), 0 2px 8px rgba(15,23,42,0.04);
     }
-    h1 { margin-top: 0; color: #1a73e8; }
-    h3 { font-size: 15px; margin: 15px 0 8px; color: #444; }
-    .step {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        background: #fafafa;
+
+    /* HEADER */
+    .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
     }
-    .step h2 {
-        margin-top: 0;
-        font-size: 18px;
-        color: #1a73e8;
+    h1 {
+        margin: 0;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #0f172a;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .app-subtitle {
+        margin: 6px 0 0;
+        font-size: 13.5px;
+        color: var(--muted);
+    }
+
+    h3 { font-size: 14px; margin: 15px 0 8px; color: #444; }
+
+    /* STEP CARDS */
+    .step {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px 26px;
+        margin-top: 22px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+        transition: box-shadow .2s;
+    }
+    .step:hover { box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
+
+    .step h2 {
+        margin: 0 0 16px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     .step-num {
-        background: #1a73e8;
+        background: linear-gradient(135deg, #3b82f6, #4f46e5);
         color: #fff;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 700;
         flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(37,99,235,0.35);
     }
-    label { display: block; margin: 8px 0 4px; font-weight: 500; font-size: 13px; }
+
+    /* FORM */
+    label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: 600;
+        font-size: 12px;
+        color: #475569;
+        letter-spacing: 0.01em;
+    }
     input[type="file"], input[type="text"], input[type="number"], select {
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
+        padding: 9px 11px;
+        border: 1px solid #d5dde8;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-family: inherit;
+        color: var(--text);
         width: 100%;
+        background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    input[type="file"] {
+        padding: 7px 9px;
+        background: #f8fafc;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    input[type="file"]::file-selector-button {
+        padding: 6px 12px;
+        margin-right: 10px;
+        border: 1px solid #d5dde8;
+        border-radius: 6px;
+        background: #fff;
+        color: #334155;
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s;
+    }
+    input[type="file"]::file-selector-button:hover { background: #f1f5f9; }
+    input[type="text"]:focus, input[type="number"]:focus,
+    select:focus, input[type="file"]:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
     input[type="color"] {
         width: 100%;
         height: 38px;
-        padding: 2px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
+        padding: 3px;
+        border: 1px solid #d5dde8;
+        border-radius: 8px;
+        background: #fff;
         cursor: pointer;
     }
+
+    /* BUTTONS */
     button {
-        padding: 10px 18px;
-        background: #1a73e8;
+        padding: 9px 18px;
+        background: var(--primary);
         color: #fff;
         border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: 0.2s;
-    }
-    button:hover { background: #1557b0; }
-    button:disabled { background: #ccc; cursor: not-allowed; }
-    button.secondary { background: #5f6368; }
-    button.secondary:hover { background: #444; }
-    button.success { background: #34a853; font-size: 16px; padding: 14px 28px; }
-    button.success:hover { background: #2a8544; }
-    button.danger { background: #ea4335; padding: 6px 12px; font-size: 12px; }
-    button.danger:hover { background: #c5221f; }
-    button.purple { background: #9334e6; }
-    button.purple:hover { background: #7c2bc4; }
-
-    .preview-box {
-        border: 2px dashed #ccc;
         border-radius: 8px;
-        padding: 10px;
+        cursor: pointer;
+        font-size: 13.5px;
+        font-family: inherit;
+        font-weight: 600;
+        transition: background .15s, box-shadow .15s, transform .08s;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.1);
+    }
+    button:hover { background: var(--primary-dark); }
+    button:active { transform: translateY(1px); }
+    button:disabled { background: #cbd5e1; color: #f8fafc; cursor: not-allowed; box-shadow: none; }
+
+    button.secondary {
         background: #fff;
+        color: #334155;
+        border: 1px solid #d5dde8;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.05);
+    }
+    button.secondary:hover { background: #f8fafc; border-color: #b9c5d6; }
+
+    button.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        font-size: 15px;
+        padding: 14px 30px;
+        box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+    }
+    button.success:hover { background: linear-gradient(135deg, #059669, #047857); }
+
+    button.danger {
+        background: #fff;
+        color: var(--danger);
+        border: 1px solid #fecaca;
+        padding: 5px 11px;
+        font-size: 12px;
+        box-shadow: none;
+    }
+    button.danger:hover { background: #fef2f2; border-color: #fca5a5; }
+
+    button.purple {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        box-shadow: 0 1px 2px rgba(124,58,237,0.25);
+    }
+    button.purple:hover { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+
+    /* PREVIEW */
+    .preview-box {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        background: #f8fafc;
         margin-top: 10px;
         max-width: 100%;
         overflow: auto;
+        text-align: center;
     }
     .preview-box img { max-width: 100%; display: block; margin: auto; }
+
     .info {
-        background: #e8f0fe;
-        padding: 10px 15px;
-        border-radius: 6px;
+        background: var(--primary-light);
+        border: 1px solid #dbeafe;
+        padding: 10px 14px;
+        border-radius: 8px;
         font-size: 13px;
-        margin-top: 10px;
-        color: #1967d2;
+        margin-top: 12px;
+        color: #1e40af;
     }
     .warn {
-        background: #fef7e0;
-        padding: 10px 15px;
-        border-radius: 6px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        padding: 10px 14px;
+        border-radius: 8px;
         font-size: 13px;
-        margin-top: 10px;
-        color: #b06000;
+        margin-top: 12px;
+        color: #92400e;
     }
-    .row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+
+    .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
     .col { flex: 1; min-width: 150px; }
+
     table {
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 12px;
         font-size: 13px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
     }
-    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
-    th { background: #f1f3f4; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+    th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
+    tr:last-child td { border-bottom: none; }
 
     /* FIELD CARDS */
     .text-field-card {
         background: #fff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 15px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
         margin-bottom: 12px;
         position: relative;
-        transition: 0.2s;
+        transition: border-color .15s, box-shadow .15s;
     }
     .text-field-card.active {
-        border-color: #1a73e8;
-        box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
-    .text-field-card.image-field {
-        border-left: 4px solid #9334e6;
-    }
+    .text-field-card.image-field { border-left: 3px solid var(--purple); }
     .text-field-card.image-field.active {
-        border-color: #9334e6;
-        box-shadow: 0 0 0 3px rgba(147,52,230,0.15);
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
     }
     .text-field-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         cursor: pointer;
     }
     .text-field-title {
         font-weight: 600;
-        color: #1a73e8;
-        font-size: 14px;
+        color: #1e40af;
+        font-size: 13.5px;
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    .image-field .text-field-title { color: #9334e6; }
+    .image-field .text-field-title { color: var(--purple); }
     .color-dot {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
         border: 2px solid #fff;
-        box-shadow: 0 0 0 1px #999;
+        box-shadow: 0 0 0 1.5px #cbd5e1;
     }
     .text-field-card .row { gap: 10px; }
     .text-field-card .col { min-width: 120px; }
@@ -193,19 +341,42 @@
     .page-selector {
         display: flex;
         gap: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         flex-wrap: wrap;
     }
     .page-btn {
-        background: #f1f3f4;
-        color: #333;
-        padding: 8px 16px;
-        border: 2px solid transparent;
+        background: #fff;
+        color: #475569;
+        padding: 8px 18px;
+        border: 1px solid #d5dde8;
+        box-shadow: none;
+        font-weight: 600;
     }
+    .page-btn:hover { background: #f8fafc; }
     .page-btn.active {
-        background: #1a73e8;
+        background: linear-gradient(135deg, #3b82f6, #4f46e5);
         color: #fff;
-        border-color: #1557b0;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    }
+
+    /* PAGE TEMPLATE LIST */
+    .page-template-item {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+    }
+    .page-template-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        font-size: 13px;
+        color: #334155;
     }
 
     /* LOADING */
@@ -213,7 +384,8 @@
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.7);
+        background: rgba(15,23,42,0.75);
+        backdrop-filter: blur(4px);
         z-index: 9999;
         justify-content: center;
         align-items: center;
@@ -224,8 +396,8 @@
     #loadingOverlay.active { display: flex; }
     .spinner {
         width: 60px; height: 60px;
-        border: 6px solid rgba(255,255,255,0.2);
-        border-top-color: #1a73e8;
+        border: 6px solid rgba(255,255,255,0.18);
+        border-top-color: #60a5fa;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-bottom: 20px;
@@ -237,96 +409,113 @@
         min-height: 20px; text-align: center;
     }
     .progress-bar-outer {
-        width: 400px; max-width: 90vw; height: 12px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 10px; overflow: hidden; margin-bottom: 8px;
+        width: 400px; max-width: 90vw; height: 10px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 999px; overflow: hidden; margin-bottom: 8px;
     }
     .progress-bar-inner {
         height: 100%; width: 0%;
-        background: linear-gradient(90deg, #1a73e8, #34a853);
+        background: linear-gradient(90deg, #60a5fa, #34d399);
         transition: width 0.2s;
     }
     .progress-text { font-size: 13px; opacity: 0.9; }
 
-    .inline-progress { margin-top: 12px; display: none; }
+    .inline-progress { margin-top: 14px; display: none; }
     .inline-progress.active { display: block; }
     .inline-progress-bar {
-        width: 100%; height: 10px; background: #e0e0e0;
-        border-radius: 6px; overflow: hidden;
+        width: 100%; height: 10px; background: #e2e8f0;
+        border-radius: 999px; overflow: hidden;
     }
     .inline-progress-fill {
         height: 100%; width: 0%;
-        background: linear-gradient(90deg, #1a73e8, #34a853);
+        background: linear-gradient(90deg, #3b82f6, #10b981);
         transition: width 0.15s;
     }
     .inline-progress-text {
-        font-size: 12px; color: #555; margin-top: 5px;
+        font-size: 12px; color: var(--muted); margin-top: 6px;
         display: flex; justify-content: space-between;
     }
 
     #log {
-        background: #1e1e1e; color: #d4d4d4;
-        font-family: 'Consolas', monospace; font-size: 12px;
-        padding: 12px; border-radius: 6px;
-        max-height: 220px; overflow-y: auto;
-        margin-top: 15px; white-space: pre-wrap; display: none;
+        background: #0f172a;
+        color: #cbd5e1;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        font-size: 12px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        max-height: 240px;
+        overflow-y: auto;
+        margin-top: 16px;
+        white-space: pre-wrap;
+        display: none;
+        line-height: 1.6;
     }
     #log.active { display: block; }
-    .log-ok { color: #4ec9b0; }
-    .log-warn { color: #dcdcaa; }
-    .log-err { color: #f48771; }
-    .log-info { color: #569cd6; }
+    .log-ok { color: #4ade80; }
+    .log-warn { color: #fbbf24; }
+    .log-err { color: #f87171; }
+    .log-info { color: #60a5fa; }
 
+    /* BADGES */
     .badge {
-        background: #34a853; color: #fff; padding: 2px 8px;
-        border-radius: 12px; font-size: 11px; margin-left: 6px;
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 6px;
+        vertical-align: middle;
     }
-    .badge.new { background: #ea4335; }
+    .badge.new { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
 
     .hint {
-        background: #e6f4ea;
-        border-left: 4px solid #34a853;
-        padding: 10px 15px;
+        background: #ecfdf5;
+        border-left: 3px solid #10b981;
+        padding: 11px 15px;
         font-size: 13px;
-        color: #1e7e34;
-        margin-top: 8px;
-        border-radius: 4px;
+        color: #065f46;
+        margin-top: 10px;
+        border-radius: 0 8px 8px 0;
     }
 
     .page-settings {
-        background: #fff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 18px;
     }
     .page-settings-title {
         font-weight: 600;
-        color: #1a73e8;
-        margin-bottom: 10px;
+        color: #0f172a;
+        margin-bottom: 12px;
+        font-size: 14px;
     }
 
-    /* TABS untuk jenis field */
+    /* TABS */
     .field-tabs {
         display: flex;
-        gap: 0;
-        border-bottom: 2px solid #e0e0e0;
-        margin-bottom: 15px;
+        gap: 4px;
+        border-bottom: 1px solid var(--border);
+        margin: 20px 0 16px;
     }
     .field-tab {
         background: none;
-        color: #666;
+        box-shadow: none;
+        color: var(--muted);
         border: none;
         border-radius: 0;
-        padding: 10px 20px;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -2px;
-        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        padding: 10px 18px;
+        margin-bottom: -1px;
+        font-weight: 600;
     }
-    .field-tab:hover { background: #f5f5f5; color: #333; }
+    .field-tab:hover { background: #f8fafc; color: #1e293b; }
     .field-tab.active {
-        color: #1a73e8;
-        border-bottom-color: #1a73e8;
+        color: var(--primary);
+        border-bottom-color: var(--primary);
         background: none;
     }
 
@@ -334,9 +523,9 @@
         width: 60px;
         height: 60px;
         object-fit: contain;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: #fafafa;
+        border: 1px solid #d5dde8;
+        border-radius: 6px;
+        background: #f8fafc;
         padding: 3px;
     }
     .thumb-container {
@@ -359,8 +548,12 @@
 </div>
 
 <div class="container">
-    <h1>Generator Sertifikat Massal</h1>
-    <p style="color:#666;">Drag & drop + multi halaman + tanda tangan + cap/stempel.</p>
+    <header class="app-header">
+        <div>
+            <h1>Generator Sertifikat Massal <span class="badge new">v4</span></h1>
+            <p class="app-subtitle">Drag &amp; drop + multi halaman + tanda tangan + cap/stempel.</p>
+        </div>
+    </header>
 
     <!-- STEP 1: Template -->
     <div class="step">
@@ -383,50 +576,37 @@
 
     <!-- STEP 3: Fields -->
     <div class="step">
-        <h2><span class="step-num">3</span> Halaman, Teks & Gambar</h2>
+        <h2><span class="step-num">3</span> Halaman, Teks &amp; Gambar</h2>
 
         <div class="page-settings">
-            <div class="page-settings-title">📄 Pengaturan Halaman</div>
-            <div class="row">
-                <div class="col">
-                    <label>Jumlah Halaman per Sertifikat</label>
-                    <select id="pageCount" onchange="onPageCountChange()">
-                        <option value="1">1 Halaman</option>
-                        <option value="2">2 Halaman</option>
-                    </select>
-                </div>
-                <div class="col" id="page2TemplateCol" style="display:none;">
-                    <label>Upload Template Halaman 2</label>
-                    <input type="file" id="page2TemplateFile" accept="image/*">
-                    <div class="hint" id="page2Hint" style="display:none;">✅ Template halaman 2 siap</div>
-                </div>
+            <div class="page-settings-title">Pengaturan Halaman</div>
+            <div id="pageTemplateList"></div>
+            <div style="margin-top:14px;">
+                <button class="secondary" type="button" onclick="addPage()">Tambah Halaman</button>
             </div>
         </div>
 
-        <div class="page-selector" id="pageSelector">
-            <button class="page-btn active" onclick="selectPage(1)">Halaman 1</button>
-            <button class="page-btn" id="page2Btn" onclick="selectPage(2)" style="display:none;">Halaman 2</button>
-        </div>
+        <div class="page-selector" id="pageSelector"></div>
 
         <div class="hint">
-            💡 <b>Cara pakai:</b> Klik elemen di preview lalu <b>drag dengan mouse</b> untuk memindahkan posisi.
+            <b>Cara pakai:</b> Klik elemen di preview lalu <b>drag dengan mouse</b> untuk memindahkan posisi.
             Teks biru, gambar ungu.
         </div>
 
         <!-- TABS -->
         <div class="field-tabs">
-            <button class="field-tab active" id="tabTexts" onclick="switchTab('texts')">📝 Teks</button>
-            <button class="field-tab" id="tabImages" onclick="switchTab('images')">🖼️ Gambar (TTD/Cap)</button>
+            <button class="field-tab active" id="tabTexts" onclick="switchTab('texts')">Teks</button>
+            <button class="field-tab" id="tabImages" onclick="switchTab('images')">Gambar (TTD/Cap)</button>
         </div>
 
         <!-- CONTENT: TEXTS -->
         <div id="tabContentTexts">
             <div id="textFieldsContainer"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-                <button class="secondary" onclick="addTextField('nama')">➕ Teks Nama</button>
-                <button class="secondary" onclick="addTextField('nim')">➕ Teks NIM</button>
-                <button class="secondary" onclick="addTextField('nomor')">➕ Nomor Sertifikat</button>
-                <button class="secondary" onclick="addTextField('custom')">➕ Teks Custom</button>
+                <button class="secondary" onclick="addTextField('nama')">Tambah Teks Nama</button>
+                <button class="secondary" onclick="addTextField('nim')">Tambah Teks NIM</button>
+                <button class="secondary" onclick="addTextField('nomor')">Tambah Nomor Sertifikat</button>
+                <button class="secondary" onclick="addTextField('custom')">Tambah Teks Custom</button>
             </div>
         </div>
 
@@ -434,9 +614,9 @@
         <div id="tabContentImages" style="display:none;">
             <div id="imageFieldsContainer"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-                <button class="purple" onclick="addImageField('ttd')">✍️ Tambah Tanda Tangan</button>
-                <button class="purple" onclick="addImageField('cap')">🔴 Tambah Cap/Stempel</button>
-                <button class="purple" onclick="addImageField('custom')">🖼️ Tambah Gambar Custom</button>
+                <button class="purple" onclick="addImageField('ttd')">Tambah Tanda Tangan</button>
+                <button class="purple" onclick="addImageField('cap')">Tambah Cap/Stempel</button>
+                <button class="purple" onclick="addImageField('custom')">Tambah Gambar Custom</button>
             </div>
         </div>
     </div>
@@ -444,8 +624,8 @@
     <!-- STEP 4: Preview -->
     <div class="step">
         <h2><span class="step-num">4</span> Preview Sertifikat</h2>
-        <p style="font-size:13px;color:#888;margin-top:0;">
-            🖱️ Klik & tahan elemen lalu geser dengan mouse. Bisa juga drag sudut untuk resize.
+        <p style="font-size:13px;color:#94a3b8;margin-top:0;">
+            Klik &amp; tahan elemen lalu geser dengan mouse. Bisa juga drag sudut untuk resize.
         </p>
         <div class="preview-box">
             <div id="canvasWrapper">
@@ -457,8 +637,35 @@
     <!-- STEP 5: Generate -->
     <div class="step">
         <h2><span class="step-num">5</span> Generate Semua Sertifikat</h2>
+
+        <div class="page-settings">
+            <div class="page-settings-title">Pengaturan Nama File PDF</div>
+            <div class="row">
+                <div class="col">
+                    <label>Kolom Nama Utama</label>
+                    <select id="nameMainCol"></select>
+                </div>
+                <div class="col">
+                    <label>Kolom Tambahan (opsional)</label>
+                    <select id="nameExtraCol"></select>
+                </div>
+                <div class="col">
+                    <label>Posisi Kolom Tambahan</label>
+                    <select id="nameExtraPos">
+                        <option value="belakang">Di Belakang Nama</option>
+                        <option value="depan">Di Depan Nama</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Pemisah</label>
+                    <input type="text" id="nameSeparator" value=" - ">
+                </div>
+            </div>
+            <div class="info" id="namePreview" style="margin-top:12px;">Contoh nama file: -</div>
+        </div>
+
         <button class="success" id="generateBtn" onclick="generateAll()" disabled>
-            📦 Generate & Download ZIP
+            Generate &amp; Download ZIP
         </button>
 
         <div class="inline-progress" id="inlineProgress">
@@ -478,11 +685,11 @@
 <script>
 const { jsPDF } = window.jspdf;
 
-let templateImage = null;
-let templateImage2 = null;
+// pageTemplates[i] = HTMLImageElement untuk halaman (i+1), index 0 = halaman 1
+let pageTemplates = [null];
 let excelData = [];
 let excelHeaders = [];
-let textFields = [];   // { id, page, kind:'text', type, column, posX, posY, ... }
+let textFields = [];   // { id, page, kind:'text', type, column, staticText, posX, posY, ... }
 let imageFields = [];  // { id, page, kind:'image', type, imgSrc, imgEl, posX, posY, widthPct, rotation }
 let fieldIdCounter = 0;
 let currentPage = 1;
@@ -503,6 +710,16 @@ let dragState = {
     resizeHandle: null
 };
 
+/* ==================== UTIL ==================== */
+function escapeHtml(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 /* ==================== TAB SWITCH ==================== */
 function switchTab(tab) {
     activeTab = tab;
@@ -512,52 +729,103 @@ function switchTab(tab) {
     document.getElementById('tabContentImages').style.display = tab === 'images' ? 'block' : 'none';
 }
 
-/* ==================== PAGE SETTINGS ==================== */
-function onPageCountChange() {
-    const count = parseInt(document.getElementById('pageCount').value);
-    const page2Btn = document.getElementById('page2Btn');
-    const page2TemplateCol = document.getElementById('page2TemplateCol');
-
-    if (count === 2) {
-        page2Btn.style.display = 'inline-block';
-        page2TemplateCol.style.display = 'block';
-    } else {
-        page2Btn.style.display = 'none';
-        page2TemplateCol.style.display = 'none';
-        if (currentPage === 2) selectPage(1);
-        textFields = textFields.filter(f => f.page !== 2);
-        imageFields = imageFields.filter(f => f.page !== 2);
-        renderAll();
+/* ==================== PAGE MANAGEMENT ==================== */
+function renderPageSelector() {
+    const container = document.getElementById('pageSelector');
+    container.innerHTML = '';
+    for (let i = 1; i <= pageTemplates.length; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.type = 'button';
+        btn.textContent = 'Halaman ' + i;
+        btn.onclick = () => selectPage(i);
+        container.appendChild(btn);
     }
+}
+
+function renderPageTemplateList() {
+    const container = document.getElementById('pageTemplateList');
+    container.innerHTML = '';
+
+    if (pageTemplates.length <= 1) {
+        container.innerHTML = '<div class="hint">Saat ini hanya 1 halaman. Klik tombol di bawah untuk menambah halaman sertifikat.</div>';
+        return;
+    }
+
+    for (let i = 1; i < pageTemplates.length; i++) {
+        const hasImg = !!pageTemplates[i];
+        const item = document.createElement('div');
+        item.className = 'page-template-item';
+        item.innerHTML = `
+            <div class="page-template-header">
+                <span>Halaman ${i + 1}
+                    ${hasImg
+                        ? '<span class="badge">siap</span>'
+                        : '<span class="badge new">belum ada template</span>'}
+                </span>
+                <button class="danger" type="button" onclick="removePage(${i + 1})">Hapus Halaman</button>
+            </div>
+            <input type="file" accept="image/*" onchange="onPageTemplateUpload(${i + 1}, this)">
+        `;
+        container.appendChild(item);
+    }
+}
+
+function addPage() {
+    pageTemplates.push(null);
+    const newPage = pageTemplates.length;
+    renderPageSelector();
+    renderPageTemplateList();
+    selectPage(newPage);
     updatePreview();
     checkReady();
 }
 
-function selectPage(page) {
-    currentPage = page;
-    document.querySelectorAll('.page-btn').forEach((btn, i) => {
-        btn.classList.toggle('active', (i + 1) === page);
-    });
+function removePage(pageNum) {
+    if (pageTemplates.length <= 1) return;
+    if (!confirm(`Hapus Halaman ${pageNum}? Semua elemen teks & gambar di halaman ini juga akan dihapus.`)) return;
+
+    pageTemplates.splice(pageNum - 1, 1);
+
+    const shift = (arr) => arr
+        .filter(f => f.page !== pageNum)
+        .map(f => f.page > pageNum ? Object.assign({}, f, { page: f.page - 1 }) : f);
+
+    textFields = shift(textFields);
+    imageFields = shift(imageFields);
+
+    if (currentPage > pageTemplates.length) currentPage = pageTemplates.length;
+
+    renderPageSelector();
+    renderPageTemplateList();
     renderAll();
     updatePreview();
+    checkReady();
 }
 
-document.getElementById('page2TemplateFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
+function onPageTemplateUpload(pageNum, input) {
+    const file = input.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(ev) {
         const img = new Image();
         img.onload = function() {
-            templateImage2 = img;
-            document.getElementById('page2Hint').style.display = 'block';
+            pageTemplates[pageNum - 1] = img;
+            renderPageTemplateList();
             updatePreview();
             checkReady();
         };
         img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
-});
+}
+
+function selectPage(page) {
+    currentPage = page;
+    renderPageSelector();
+    renderAll();
+    updatePreview();
+}
 
 /* ==================== TEXT FIELDS ==================== */
 function addTextField(type = 'custom') {
@@ -567,6 +835,7 @@ function addTextField(type = 'custom') {
     let config = {
         id, page, kind: 'text', type,
         column: '', format: 'asis',
+        staticText: '',
         posX: 50, posY: 50,
         fontSize: 36,
         fontFamily: 'helvetica',
@@ -590,7 +859,8 @@ function addTextField(type = 'custom') {
         config.fontSize = 16; config.label = 'Teks Custom';
     }
 
-    if (excelHeaders.length > 0) {
+    // Kolom Excel hanya untuk tipe selain custom
+    if (type !== 'custom' && excelHeaders.length > 0) {
         const keyword = type === 'nama' ? 'nama' : type === 'nim' ? 'nim' : type === 'nomor' ? 'nomor' : '';
         if (keyword) {
             const found = excelHeaders.find(h => h.toLowerCase().includes(keyword));
@@ -613,7 +883,7 @@ function removeTextField(id) {
 
 function updateField(id, key, value) {
     const f = textFields.find(x => x.id === id);
-    if (f) { f[key] = value; updatePreview(); }
+    if (f) { f[key] = value; updatePreview(); checkReady(); }
 }
 
 function focusField(id) {
@@ -633,12 +903,11 @@ function addImageField(type = 'custom') {
         imgSrc: null,
         imgEl: null,
         posX: 50, posY: 80,
-        widthPct: 15,   // lebar gambar dalam % dari lebar sertifikat
-        rotation: 0,    // derajat
+        widthPct: 15,
+        rotation: 0,
         opacity: 1
     };
 
-    // Posisi default bertingkat
     const count = imageFields.filter(f => f.page === page).length;
     if (type === 'ttd') { config.posX = 25; config.posY = 82; config.widthPct = 15; }
     else if (type === 'cap') { config.posX = 30; config.posY = 80; config.widthPct = 12; }
@@ -712,24 +981,34 @@ function renderTextFields() {
             `<option value="${h}" ${f.column === h ? 'selected' : ''}>${h}</option>`
         ).join('');
 
+        // Kontrol pertama: untuk custom pakai input manual, lainnya pakai kolom Excel
+        const firstControl = f.type === 'custom'
+            ? `<div class="col">
+                   <label>Teks (manual)</label>
+                   <input type="text" value="${escapeHtml(f.staticText || '')}"
+                       placeholder="Ketik teks di sini..."
+                       oninput="updateField(${f.id}, 'staticText', this.value)">
+               </div>`
+            : `<div class="col">
+                   <label>Kolom Excel</label>
+                   <select onchange="updateField(${f.id}, 'column', this.value)">
+                       <option value="">-- pilih --</option>
+                       ${colOptions}
+                   </select>
+               </div>`;
+
         card.innerHTML = `
             <div class="text-field-header" onclick="focusField(${f.id})">
                 <span class="text-field-title">
                     <span class="color-dot" style="background:${f.color};"></span>
-                    📝 ${f.label} #${idx+1}
-                    <span style="font-weight:400;font-size:11px;color:#888;">(Hal. ${f.page})</span>
+                    ${f.label} #${idx+1}
+                    <span style="font-weight:400;font-size:11px;color:#94a3b8;">(Hal. ${f.page})</span>
                 </span>
-                <button class="danger" onclick="event.stopPropagation();removeTextField(${f.id})">🗑 Hapus</button>
+                <button class="danger" onclick="event.stopPropagation();removeTextField(${f.id})">Hapus</button>
             </div>
 
             <div class="row">
-                <div class="col">
-                    <label>Kolom Excel</label>
-                    <select onchange="updateField(${f.id}, 'column', this.value)">
-                        <option value="">-- pilih --</option>
-                        ${colOptions}
-                    </select>
-                </div>
+                ${firstControl}
                 <div class="col">
                     <label>Format</label>
                     <select onchange="updateField(${f.id}, 'format', this.value)">
@@ -821,15 +1100,15 @@ function renderImageFields() {
 
         const thumbHtml = f.imgSrc
             ? `<img src="${f.imgSrc}" class="image-thumb" alt="thumb">`
-            : `<div class="image-thumb" style="display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px;">no img</div>`;
+            : `<div class="image-thumb" style="display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">no img</div>`;
 
         card.innerHTML = `
             <div class="text-field-header" onclick="focusField(${f.id})">
                 <span class="text-field-title">
-                    🖼️ ${f.label} #${idx+1}
-                    <span style="font-weight:400;font-size:11px;color:#888;">(Hal. ${f.page})</span>
+                    ${f.label} #${idx+1}
+                    <span style="font-weight:400;font-size:11px;color:#94a3b8;">(Hal. ${f.page})</span>
                 </span>
-                <button class="danger" onclick="event.stopPropagation();removeImageField(${f.id})">🗑 Hapus</button>
+                <button class="danger" onclick="event.stopPropagation();removeImageField(${f.id})">Hapus</button>
             </div>
 
             <div class="thumb-container" style="margin-bottom:10px;">
@@ -880,7 +1159,7 @@ document.getElementById('templateFile').addEventListener('change', function(e) {
     reader.onload = function(ev) {
         const img = new Image();
         img.onload = function() {
-            templateImage = img;
+            pageTemplates[0] = img;
             document.getElementById('templatePreview').style.display = 'block';
             document.getElementById('templateImg').src = ev.target.result;
             updatePreview();
@@ -909,18 +1188,22 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
 
         document.getElementById('excelInfo').style.display = 'block';
         document.getElementById('excelInfo').innerHTML =
-            `✅ Berhasil memuat <b>${json.length}</b> baris. Kolom: <b>${excelHeaders.join(', ')}</b>`;
+            `Berhasil memuat <b>${json.length}</b> baris. Kolom: <b>${excelHeaders.join(', ')}</b>`;
 
         let table = '<table><tr>' + excelHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
         json.slice(0, 5).forEach(row => {
             table += '<tr>' + excelHeaders.map(h => `<td>${row[h]}</td>`).join('') + '</tr>';
         });
         table += '</table>';
-        if (json.length > 5) table += `<p style="font-size:12px;color:#888;">... dan ${json.length - 5} baris lainnya</p>`;
+        if (json.length > 5) table += `<p style="font-size:12px;color:#94a3b8;">... dan ${json.length - 5} baris lainnya</p>`;
         document.getElementById('excelPreview').innerHTML = table;
 
+        // populate dropdown nama file
+        populateNameColumns();
+
+        // Isi kolom default untuk field non-custom yang belum punya kolom
         textFields.forEach(f => {
-            if (!f.column && excelHeaders.length > 0) f.column = excelHeaders[0];
+            if (f.type !== 'custom' && !f.column && excelHeaders.length > 0) f.column = excelHeaders[0];
         });
         renderAll();
 
@@ -931,6 +1214,97 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
     };
     reader.readAsArrayBuffer(file);
 });
+
+/* ==================== PENGATURAN NAMA FILE ==================== */
+function populateNameColumns() {
+    const mainSel = document.getElementById('nameMainCol');
+    const extraSel = document.getElementById('nameExtraCol');
+    const curMain = mainSel.value;
+    const curExtra = extraSel.value;
+
+    mainSel.innerHTML = excelHeaders.map(h =>
+        `<option value="${h}">${h}</option>`).join('');
+    extraSel.innerHTML = '<option value="">-- tidak ada --</option>' +
+        excelHeaders.map(h => `<option value="${h}">${h}</option>`).join('');
+
+    const nameCol = excelHeaders.find(h => h.toLowerCase().includes('nama')) || excelHeaders[0];
+    if (curMain && excelHeaders.includes(curMain)) mainSel.value = curMain;
+    else if (nameCol) mainSel.value = nameCol;
+
+    if (curExtra && excelHeaders.includes(curExtra)) extraSel.value = curExtra;
+
+    updateNamePreview();
+}
+
+function updateNamePreview() {
+    const mainCol = document.getElementById('nameMainCol').value;
+    const extraCol = document.getElementById('nameExtraCol').value;
+    const extraPos = document.getElementById('nameExtraPos').value;
+    const sep = document.getElementById('nameSeparator').value;
+    const previewEl = document.getElementById('namePreview');
+
+    if (!mainCol) {
+        previewEl.textContent = 'Contoh nama file: -';
+        return;
+    }
+
+    let mainVal = '', extraVal = '';
+    if (excelData.length > 0) {
+        mainVal = String(excelData[0][mainCol] ?? '').trim();
+        extraVal = extraCol ? String(excelData[0][extraCol] ?? '').trim() : '';
+    } else {
+        mainVal = `{${mainCol}}`;
+        extraVal = extraCol ? `{${extraCol}}` : '';
+    }
+
+    let base;
+    if (extraVal) {
+        base = extraPos === 'depan'
+            ? `${extraVal}${sep}${mainVal}`
+            : `${mainVal}${sep}${extraVal}`;
+    } else {
+        base = mainVal;
+    }
+    if (!base.trim()) base = 'baris N';
+
+    previewEl.innerHTML = `Contoh nama file: <b>${base}.pdf</b>`;
+}
+
+document.getElementById('nameMainCol').addEventListener('change', () => { updateNamePreview(); checkReady(); });
+document.getElementById('nameExtraCol').addEventListener('change', updateNamePreview);
+document.getElementById('nameExtraPos').addEventListener('change', updateNamePreview);
+document.getElementById('nameSeparator').addEventListener('input', updateNamePreview);
+
+function buildFileBase(row, i) {
+    const mainCol = document.getElementById('nameMainCol').value;
+    const extraCol = document.getElementById('nameExtraCol').value;
+    const extraPos = document.getElementById('nameExtraPos').value;
+    const sep = document.getElementById('nameSeparator').value;
+
+    const mainVal = mainCol ? String(row[mainCol] ?? '').trim() : '';
+    const extraVal = extraCol ? String(row[extraCol] ?? '').trim() : '';
+
+    let base;
+    if (extraVal) {
+        base = extraPos === 'depan'
+            ? `${extraVal}${sep}${mainVal}`
+            : `${mainVal}${sep}${extraVal}`;
+    } else {
+        base = mainVal;
+    }
+    if (!base.trim()) base = `baris ${i + 1}`;
+    return base;
+}
+
+function makeUniqueFilename(base, used) {
+    let name = `${base}.pdf`;
+    if (!used.has(name)) { used.add(name); return name; }
+    let n = 2;
+    while (used.has(`${base} (${n}).pdf`)) n++;
+    name = `${base} (${n}).pdf`;
+    used.add(name);
+    return name;
+}
 
 /* ==================== FORMAT ==================== */
 function formatValue(val, format) {
@@ -944,10 +1318,26 @@ function formatValue(val, format) {
     }
 }
 
+/* ==================== HELPER: teks final untuk preview/hit-test ==================== */
+// Mengembalikan string final atau '' kalau kosong.
+// - custom: pakai staticText
+// - lainnya: pakai kolom Excel (baris pertama) atau label sebagai placeholder
+function getDisplayTextForField(f) {
+    let raw;
+    if (f.type === 'custom') {
+        raw = formatValue(f.staticText || '', f.format);
+    } else if (excelData.length > 0 && f.column) {
+        raw = formatValue(excelData[0][f.column], f.format);
+    } else {
+        raw = f.label || 'Contoh';
+    }
+    const text = (f.prefix || '') + raw + (f.suffix || '');
+    return text.trim() ? text : '';
+}
+
 /* ==================== PREVIEW ==================== */
 function getCurrentTemplate() {
-    if (currentPage === 2 && templateImage2) return templateImage2;
-    return templateImage;
+    return pageTemplates[currentPage - 1] || null;
 }
 
 function updatePreview() {
@@ -958,14 +1348,9 @@ function updatePreview() {
 
     if (!img) {
         canvas.width = 800; canvas.height = 500;
-        ctx.fillStyle = '#eee'; ctx.fillRect(0, 0, 800, 500);
-        ctx.fillStyle = '#999'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
-        ctx.fillText(
-            currentPage === 2 && !templateImage2
-                ? 'Upload template halaman 2 dulu'
-                : 'Upload template terlebih dahulu',
-            400, 250
-        );
+        ctx.fillStyle = '#eef2f7'; ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '20px Inter, Arial'; ctx.textAlign = 'center';
+        ctx.fillText('Upload template halaman ini dulu', 400, 250);
         return;
     }
 
@@ -990,14 +1375,8 @@ function updatePreview() {
     const textsOnPage = textFields.filter(f => f.page === currentPage);
 
     textsOnPage.forEach(f => {
-        let text = '';
-        if (excelData.length > 0 && f.column) {
-            text = formatValue(excelData[0][f.column], f.format);
-        } else {
-            text = f.label || 'Contoh';
-        }
-        text = (f.prefix || '') + text + (f.suffix || '');
-        if (!text.trim()) return;
+        const text = getDisplayTextForField(f);
+        if (!text) return;
 
         const x = w * (f.posX / 100);
         const y = h * (f.posY / 100);
@@ -1028,9 +1407,9 @@ function updatePreview() {
         const textH = fontSizePx;
         const padding = 6;
         if (activeFieldId === f.id) {
-            ctx.fillStyle = 'rgba(26,115,232,0.12)';
+            ctx.fillStyle = 'rgba(37,99,235,0.12)';
             ctx.fillRect(x - textW/2 - padding, y - textH/2 - padding, textW + padding*2, textH + padding*2);
-            ctx.strokeStyle = '#1a73e8';
+            ctx.strokeStyle = '#2563eb';
             ctx.lineWidth = 2;
             ctx.setLineDash([]);
             ctx.strokeRect(x - textW/2 - padding, y - textH/2 - padding, textW + padding*2, textH + padding*2);
@@ -1073,7 +1452,7 @@ function drawImageField(ctx, f, w, h, showHandles) {
         const corners = getRotatedCorners(x, y, imgW, imgH, f.rotation);
 
         ctx.save();
-        ctx.strokeStyle = '#9334e6';
+        ctx.strokeStyle = '#7c3aed';
         ctx.lineWidth = 2;
         ctx.setLineDash([6, 4]);
         ctx.beginPath();
@@ -1085,7 +1464,7 @@ function drawImageField(ctx, f, w, h, showHandles) {
 
         // Handle resize di sudut kanan bawah
         const handle = corners[2];
-        ctx.fillStyle = '#9334e6';
+        ctx.fillStyle = '#7c3aed';
         ctx.beginPath();
         ctx.arc(handle.x, handle.y, 7, 0, Math.PI * 2);
         ctx.fill();
@@ -1093,7 +1472,7 @@ function drawImageField(ctx, f, w, h, showHandles) {
         ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('⤡', handle.x, handle.y);
+        ctx.fillText('\u2921', handle.x, handle.y);
         ctx.restore();
     }
 }
@@ -1139,14 +1518,8 @@ function hitTestField(mouseX, mouseY) {
 
     for (let i = textsOnPage.length - 1; i >= 0; i--) {
         const f = textsOnPage[i];
-        let text = '';
-        if (excelData.length > 0 && f.column) {
-            text = formatValue(excelData[0][f.column], f.format);
-        } else {
-            text = f.label || 'Contoh';
-        }
-        text = (f.prefix || '') + text + (f.suffix || '');
-        if (!text.trim()) continue;
+        const text = getDisplayTextForField(f);
+        if (!text) continue;
 
         const x = w * (f.posX / 100);
         const y = h * (f.posY / 100);
@@ -1289,15 +1662,11 @@ function onPointerMove(evt) {
             if (!f) return;
 
             if (dragState.isResizing) {
-                // Hitung jarak dari pusat ke mouse → ubah jadi widthPct
                 const cx = w * (f.posX / 100);
                 const cy = h * (f.posY / 100);
                 const dist = Math.hypot(pos.x - cx, pos.y - cy);
-                // Asumsi handle di sudut → diagonal = sqrt(w^2 + h^2)/2
-                // Cukup pakai dist * 2 sebagai diagonal
                 const diagPx = dist * 2;
                 const aspect = f.imgEl ? (f.imgEl.height / f.imgEl.width) : 1;
-                // diagonal^2 = w^2 + h^2 = w^2 (1 + aspect^2)
                 const newW = diagPx / Math.sqrt(1 + aspect * aspect);
                 const newWidthPct = (newW / w) * 100;
                 f.widthPct = Math.max(1, Math.min(100, newWidthPct));
@@ -1331,7 +1700,7 @@ function onPointerUp(evt) {
         dragState.fieldKind = null;
         canvas.classList.remove('dragging');
         canvas.style.cursor = 'default';
-        renderAll(); // refresh input angka
+        renderAll();
     }
 }
 
@@ -1339,7 +1708,6 @@ function updateCardInputs(id, x, y, widthPct) {
     const card = document.querySelector(`.text-field-card[data-field-id="${id}"]`);
     if (!card) return;
     const inputs = card.querySelectorAll('input[type="number"]');
-    // Pola: 0=X, 1=Y, (2=fontSize OR 2=widthPct)
     if (x !== null && inputs[0]) inputs[0].value = x.toFixed(1);
     if (y !== null && inputs[1]) inputs[1].value = y.toFixed(1);
     if (widthPct !== null && inputs[2]) inputs[2].value = widthPct.toFixed(1);
@@ -1354,11 +1722,20 @@ window.addEventListener('touchend', onPointerUp);
 
 /* ==================== Ready Check ==================== */
 function checkReady() {
-    const pageCount = parseInt(document.getElementById('pageCount').value);
-    let ready = templateImage && excelData.length > 0 &&
-                (textFields.length > 0 || imageFields.length > 0) &&
-                textFields.some(f => f.column);
-    if (pageCount === 2 && !templateImage2) ready = false;
+    const mainCol = document.getElementById('nameMainCol').value;
+
+    const hasTextContent = textFields.some(f => {
+        if (f.type === 'custom') return !!(f.staticText && f.staticText.trim());
+        return !!f.column;
+    });
+    const hasImageContent = imageFields.some(f => !!f.imgSrc);
+
+    let ready = pageTemplates.length > 0 &&
+                pageTemplates.every(t => t !== null) &&
+                excelData.length > 0 &&
+                !!mainCol &&
+                (hasTextContent || hasImageContent);
+
     document.getElementById('generateBtn').disabled = !ready;
 }
 
@@ -1375,14 +1752,13 @@ function log(msg, cls = '') {
 
 /* ==================== GENERATE ==================== */
 async function generateAll() {
-    if (!templateImage) return alert('Upload template dulu!');
-    const pageCount = parseInt(document.getElementById('pageCount').value);
-    if (pageCount === 2 && !templateImage2) return alert('Upload template halaman 2 dulu!');
+    if (!pageTemplates[0]) return alert('Upload template dulu!');
+    if (!pageTemplates.every(t => t !== null)) return alert('Semua halaman harus memiliki template!');
     if (excelData.length === 0) return alert('Upload Excel dulu!');
 
     const btn = document.getElementById('generateBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Memproses...';
+    btn.textContent = 'Memproses...';
 
     document.getElementById('log').innerHTML = '';
     document.getElementById('log').classList.add('active');
@@ -1392,21 +1768,12 @@ async function generateAll() {
     document.getElementById('inlineProgress').classList.add('active');
 
     const total = excelData.length;
+    const totalPages = pageTemplates.length;
     setProgress(0, total, 'Menyiapkan...');
-    log(`🚀 Mulai generate ${total} sertifikat (${pageCount} halaman)...`, 'info');
-
-    const imgW = templateImage.width;
-    const imgH = templateImage.height;
-    const aspect = imgW / imgH;
-    let pdfW, pdfH;
-    if (aspect > 1) { pdfW = 297; pdfH = 210; }
-    else { pdfW = 210; pdfH = 297; }
-    pdfH = pdfW / aspect;
-    if (pdfH > 297) { pdfH = 297; pdfW = pdfH * aspect; }
+    log(`Mulai generate ${total} sertifikat (${totalPages} halaman)...`, 'info');
 
     const zip = new JSZip();
-    const imgData1 = templateImage.src;
-    const imgData2 = templateImage2 ? templateImage2.src : null;
+    const usedFilenames = new Set();
 
     let successCount = 0, skipCount = 0;
 
@@ -1416,50 +1783,49 @@ async function generateAll() {
         setProgress(i, total, `Memproses: ${row[firstCol] || 'baris ' + (i+1)}`);
 
         try {
+            const firstSize = getPdfSize(pageTemplates[0]);
             const doc = new jsPDF({
-                orientation: pdfW > pdfH ? 'landscape' : 'portrait',
+                orientation: firstSize.pdfW > firstSize.pdfH ? 'landscape' : 'portrait',
                 unit: 'mm',
-                format: [pdfW, pdfH]
+                format: [firstSize.pdfW, firstSize.pdfH]
             });
 
             let hasContent = false;
 
-            // Halaman 1
-            doc.addImage(imgData1, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
-            renderPage(doc, row, 1, pdfW, pdfH, () => { hasContent = true; });
+            for (let p = 0; p < totalPages; p++) {
+                const tpl = pageTemplates[p];
+                const size = getPdfSize(tpl);
 
-            // Halaman 2
-            if (pageCount === 2 && imgData2) {
-                doc.addPage([pdfW, pdfH], pdfW > pdfH ? 'landscape' : 'portrait');
-                doc.addImage(imgData2, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
-                renderPage(doc, row, 2, pdfW, pdfH, () => { hasContent = true; });
+                if (p > 0) {
+                    doc.addPage([size.pdfW, size.pdfH],
+                        size.pdfW > size.pdfH ? 'landscape' : 'portrait');
+                }
+
+                doc.addImage(tpl.src, 'PNG', 0, 0, size.pdfW, size.pdfH, undefined, 'FAST');
+                renderPage(doc, row, p + 1, size.pdfW, size.pdfH, () => { hasContent = true; });
             }
 
             if (!hasContent) {
                 skipCount++;
-                log(`⚠ Baris ${i+1}: tidak ada data teks, dilewati.`, 'warn');
+                log(`Baris ${i+1}: tidak ada data teks, dilewati.`, 'warn');
                 continue;
             }
 
-            const namaField = textFields.find(f => f.type === 'nama' && f.column) ||
-                              textFields.find(f => f.column);
-            let fileBase = namaField ? String(row[namaField.column] || `baris_${i+1}`) : `baris_${i+1}`;
-            fileBase = fileBase.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
-
-            const filename = `${String(i+1).padStart(3, '0')}_${fileBase}.pdf`;
+            const fileBase = buildFileBase(row, i);
+            const filename = makeUniqueFilename(fileBase, usedFilenames);
             zip.file(filename, doc.output('blob'));
             successCount++;
-            log(`✓ ${filename}`, 'ok');
+            log(`OK: ${filename}`, 'ok');
 
         } catch (err) {
-            log(`✗ Baris ${i+1} ERROR: ${err.message}`, 'err');
+            log(`Baris ${i+1} ERROR: ${err.message}`, 'err');
         }
 
         if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
     }
 
     setProgress(total, total, 'Membuat file ZIP...');
-    log(`📦 Menggabungkan ${successCount} file PDF ke ZIP...`, 'info');
+    log(`Menggabungkan ${successCount} file PDF ke ZIP...`, 'info');
 
     const content = await zip.generateAsync(
         { type: 'blob' },
@@ -1471,7 +1837,7 @@ async function generateAll() {
     link.download = `sertifikat_massal_${Date.now()}.zip`;
     link.click();
 
-    log(`🎉 Selesai! ${successCount} berhasil, ${skipCount} dilewati.`, 'ok');
+    log(`Selesai! ${successCount} berhasil, ${skipCount} dilewati.`, 'ok');
 
     setTimeout(() => {
         overlay.classList.remove('active');
@@ -1479,7 +1845,17 @@ async function generateAll() {
     }, 800);
 
     btn.disabled = false;
-    btn.textContent = '📦 Generate & Download ZIP';
+    btn.textContent = 'Generate & Download ZIP';
+}
+
+function getPdfSize(img) {
+    const aspect = img.width / img.height;
+    let pdfW, pdfH;
+    if (aspect > 1) { pdfW = 297; pdfH = 210; }
+    else { pdfW = 210; pdfH = 297; }
+    pdfH = pdfW / aspect;
+    if (pdfH > 297) { pdfH = 297; pdfW = pdfH * aspect; }
+    return { pdfW, pdfH };
 }
 
 function renderPage(doc, row, page, pdfW, pdfH, markContent) {
@@ -1500,20 +1876,27 @@ function renderPage(doc, row, page, pdfW, pdfH, markContent) {
                   : f.imgSrc.includes('data:image/jpeg') || f.imgSrc.includes('data:image/jpg') ? 'JPEG'
                   : 'PNG';
 
-        // jsPDF bisa handle rotation via parameter (butuh versi 2.5+)
         try {
             doc.addImage(f.imgSrc, ext, x, y, imgW, imgH, undefined, 'FAST', f.rotation || 0);
         } catch (e) {
-            // Fallback kalau rotation tidak didukung
             doc.addImage(f.imgSrc, ext, x, y, imgW, imgH, undefined, 'FAST');
         }
     });
 
     // === TEKS ===
-    const textsOnPage = textFields.filter(f => f.page === page && f.column);
+    // Termasuk field custom yang pakai staticText (tanpa kolom Excel)
+    const textsOnPage = textFields.filter(f =>
+        f.page === page && (f.type === 'custom' || f.column)
+    );
+
     textsOnPage.forEach(f => {
-        let text = formatValue(row[f.column], f.format);
-        text = (f.prefix || '') + text + (f.suffix || '');
+        let raw;
+        if (f.type === 'custom') {
+            raw = formatValue(f.staticText || '', f.format);
+        } else {
+            raw = formatValue(row[f.column], f.format);
+        }
+        const text = (f.prefix || '') + raw + (f.suffix || '');
         if (!text.trim()) return;
         markContent();
 
@@ -1559,6 +1942,11 @@ function hexToRgb(hex) {
     return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) }
              : { r: 0, g: 0, b: 0 };
 }
+
+/* ==================== INIT ==================== */
+renderPageSelector();
+renderPageTemplateList();
+updatePreview();
 </script>
 </body>
 </html>
